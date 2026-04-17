@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="500" viewBox="0 0 1024 500">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0d0718"/>
+      <stop offset="55%" stop-color="#20113c"/>
+      <stop offset="100%" stop-color="#0d1d3a"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ff5db1"/>
+      <stop offset="100%" stop-color="#7ca0ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="500" rx="38" fill="url(#bg)"/>
+  <circle cx="830" cy="110" r="80" fill="#ffffff" opacity="0.05"/>
+  <circle cx="220" cy="410" r="92" fill="#ff5db1" opacity="0.08"/>
+  <path d="M512 330c-28-22-58-46-88-71-82-68-151-133-151-220 0-63 44-111 105-111 46 0 81 26 103 59 22-33 57-59 103-59 61 0 105 48 105 111 0 87-69 152-151 220-30 25-60 49-88 71z" fill="url(#glow)" opacity="0.92"/>
+  <text x="84" y="126" fill="#f7eaff" font-family="Arial, sans-serif" font-size="66" font-weight="700">First Love</text>
+  <text x="84" y="182" fill="#d7c6f4" font-family="Arial, sans-serif" font-size="28">Companion romantique IA • mobile-first • installable</text>
+  <text x="84" y="252" fill="#ffffff" font-family="Arial, sans-serif" font-size="24">Sakura et Kaito t’écoutent, flirtent et reviennent vers toi.</text>
+  <text x="84" y="292" fill="#ffffff" font-family="Arial, sans-serif" font-size="24">Démo gratuite puis relation premium via abonnement.</text>
+  <rect x="84" y="340" width="220" height="58" rx="29" fill="#ff5db1"/>
+  <text x="194" y="378" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-size="24" font-weight="700">Essayer la démo</text>
+</svg>

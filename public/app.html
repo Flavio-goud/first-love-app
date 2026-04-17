@@ -756,10 +756,10 @@ window.FIRST_LOVE_CONFIG = {
 
 (function(){
   const plans = {
-    demo: { label: 'Démo', messages: 8 },
-    starter: { label: 'Découverte', messages: 50 },
-    intime: { label: 'Intime', messages: 100 },
-    premium: { label: 'Premier Amour', messages: Number.MAX_SAFE_INTEGER }
+    demo: { label: 'Démo', messages: 8, price: '0€', vibe: 'Découvre la connexion' },
+    starter: { label: 'Découverte', messages: 50, price: '3,99€', vibe: 'Plus de douceur et de rendez-vous' },
+    intime: { label: 'Intime', messages: 100, price: '7,99€', vibe: 'Conversations plus profondes et plus fréquentes' },
+    premium: { label: 'Premier Amour', messages: Number.MAX_SAFE_INTEGER, price: '14,99€', vibe: 'Accès illimité à la relation' }
   };
 
   function periodKey(){
@@ -767,9 +767,14 @@ window.FIRST_LOVE_CONFIG = {
     return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}`;
   }
 
+  function todayKey(){
+    const d = new Date();
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
+  }
+
   function loadBilling(){
     const raw = localStorage.getItem('fl_billing');
-    let billing = raw ? JSON.parse(raw) : { plan:'demo', used:0, extra:0, period:periodKey() };
+    let billing = raw ? JSON.parse(raw) : { plan:'demo', used:0, extra:0, period:periodKey(), claimedDaily:null };
     if (!billing.plan) billing.plan = 'demo';
     if (billing.period !== periodKey()) {
       billing.used = 0;
@@ -788,6 +793,68 @@ window.FIRST_LOVE_CONFIG = {
     return Math.max(0, allowance - (b.used || 0));
   }
 
+  function claimDailyReward(){
+    const billing = loadBilling();
+    if (billing.claimedDaily === todayKey()) return false;
+    billing.extra = (billing.extra || 0) + 3;
+    billing.claimedDaily = todayKey();
+    saveBilling(billing);
+    return true;
+  }
+
+  function getTeaseLine(planKey){
+    if (planKey === 'premium') return 'Mode relation illimitée actif — tu peux laisser la tension monter sans coupure.';
+    if (planKey === 'intime') return 'Tu débloques une relation plus intense avec plus de place pour les confidences.';
+    if (planKey === 'starter') return 'Tu as déjà assez d’espace pour créer une vraie habitude de retour.';
+    return 'Tu es en démo : assez pour tomber curieux, pas assez pour rester rassasié.';
+  }
+
+  function renderConversionCard(){
+    const existing = document.getElementById('fl-conversion-card');
+    if (existing) existing.remove();
+    const host = document.getElementById('chat-row');
+    if (!host) return;
+    const billing = loadBilling();
+    const remaining = getRemaining();
+    const card = document.createElement('div');
+    card.id = 'fl-conversion-card';
+    card.className = 'fl-conversion-card';
+    const premiumHighlight = billing.plan === 'premium'
+      ? 'Premier Amour est actif sur cet appareil.'
+      : 'Passe en Premier Amour pour garder la conversation ouverte sans limite.';
+    card.innerHTML = `
+      <div class="fl-conversion-head">
+        <div>
+          <div class="fl-conversion-kicker">Tension romantique</div>
+          <div class="fl-conversion-title">${premiumHighlight}</div>
+        </div>
+        <button class="fl-mini-btn" type="button" id="claim-daily-btn">+3 aujourd'hui</button>
+      </div>
+      <div class="fl-conversion-copy">${getTeaseLine(billing.plan)} Il te reste <strong>${remaining >= Number.MAX_SAFE_INTEGER / 2 ? 'des messages illimités' : remaining + ' messages'}</strong> sur ce cycle.</div>
+      <div class="fl-conversion-actions">
+        <a href="${window.FIRST_LOVE_CONFIG.checkout.starter}" target="_blank" rel="noopener" class="fl-link-btn">Découverte 3,99€</a>
+        <a href="${window.FIRST_LOVE_CONFIG.checkout.intime}" target="_blank" rel="noopener" class="fl-link-btn">Intime 7,99€</a>
+        <a href="${window.FIRST_LOVE_CONFIG.checkout.premium}" target="_blank" rel="noopener" class="fl-link-btn fl-link-btn-primary">Premier Amour 14,99€</a>
+      </div>
+    `;
+    host.insertAdjacentElement('afterend', card);
+    const claimBtn = document.getElementById('claim-daily-btn');
+    if (claimBtn) {
+      claimBtn.disabled = billing.claimedDaily === todayKey();
+      claimBtn.textContent = billing.claimedDaily === todayKey() ? 'Bonus pris' : '+3 aujourd'hui';
+      claimBtn.addEventListener('click', () => {
+        const gained = claimDailyReward();
+        if (gained) {
+          updateBar();
+          applyPaywallState();
+          renderConversionCard();
+          const bubble = document.getElementById('bubble');
+          if (bubble) bubble.innerHTML = "*sourit doucement* J'ai gardé un petit bonus rien que pour toi aujourd'hui... reviens me parler. ♡";
+        }
+      });
+    }
+  }
+
   function updateBar(){
     const bar = document.getElementById('monetization-bar');
     if (!bar) return;
@@ -797,8 +864,8 @@ window.FIRST_LOVE_CONFIG = {
     bar.innerHTML = `
       <div class="fl-sale-box">
         <div>
-          <div class="fl-sale-plan">Plan : <strong>${plans[b.plan]?.label || 'Démo'}</strong></div>
-          <div class="fl-sale-sub">Messages : <strong>${remainingLabel}</strong></div>
+          <div class="fl-sale-plan">Plan : <strong>${plans[b.plan]?.label || 'Démo'}</strong> · <span>${plans[b.plan]?.price || '0€'}</span></div>
+          <div class="fl-sale-sub">Messages : <strong>${remainingLabel}</strong> · ${plans[b.plan]?.vibe || ''}</div>
         </div>
         <div class="fl-sale-actions">
           <button class="fl-mini-btn" onclick="window.open('/','_self')">Offres</button>
@@ -823,11 +890,11 @@ window.FIRST_LOVE_CONFIG = {
         wrap.style.cssText = 'margin-top:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:12px;color:#fff;width:100%';
         wrap.innerHTML = `
           <div style="font-size:13px;font-weight:700;margin-bottom:8px">Tu as épuisé tes messages pour cette période.</div>
-          <div style="font-size:11px;color:#c9b8e7;line-height:1.5;margin-bottom:10px">Passe au plan supérieur ou ajoute un pack de 20 messages pour continuer la conversation.</div>
+          <div style="font-size:11px;color:#c9b8e7;line-height:1.5;margin-bottom:10px">Passe au plan supérieur ou ajoute un pack de 20 messages pour continuer la conversation. Le plan Premier Amour enlève la limite.</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <a href="${window.FIRST_LOVE_CONFIG.checkout.starter}" target="_blank" rel="noopener" class="fl-link-btn">Découverte 3,99€</a>
             <a href="${window.FIRST_LOVE_CONFIG.checkout.intime}" target="_blank" rel="noopener" class="fl-link-btn">Intime 7,99€</a>
-            <a href="${window.FIRST_LOVE_CONFIG.checkout.premium}" target="_blank" rel="noopener" class="fl-link-btn">Premier Amour 14,99€</a>
+            <a href="${window.FIRST_LOVE_CONFIG.checkout.premium}" target="_blank" rel="noopener" class="fl-link-btn fl-link-btn-primary">Premier Amour 14,99€</a>
             <a href="${window.FIRST_LOVE_CONFIG.checkout.pack20}" target="_blank" rel="noopener" class="fl-link-btn">Pack +20</a>
           </div>`;
         document.getElementById('chat-row').insertAdjacentElement('afterend', wrap);
@@ -839,6 +906,7 @@ window.FIRST_LOVE_CONFIG = {
       input.placeholder = t ? t('placeholder') : 'Dis lui quelque chose...';
       document.getElementById('fl-paywall')?.remove();
     }
+    renderConversionCard();
   }
 
   function saveCurrentState(){
@@ -935,8 +1003,19 @@ window.FIRST_LOVE_CONFIG = {
     #monetization-bar{margin:0 auto 10px;max-width:440px}
     .fl-sale-box{display:flex;justify-content:space-between;align-items:center;gap:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:10px 12px}
     .fl-sale-plan{font-size:12px;color:#fff}.fl-sale-sub{font-size:11px;color:#cdb8e8;margin-top:2px}
-    .fl-sale-actions{display:flex;gap:8px;flex-wrap:wrap}.fl-mini-btn,.fl-link-btn{background:rgba(233,30,140,.16);border:1px solid rgba(233,30,140,.35);color:#fff;border-radius:999px;padding:8px 12px;font-size:11px;text-decoration:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+    .fl-sale-actions,.fl-conversion-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .fl-mini-btn,.fl-link-btn{background:rgba(233,30,140,.16);border:1px solid rgba(233,30,140,.35);color:#fff;border-radius:999px;padding:8px 12px;font-size:11px;text-decoration:none;cursor:pointer;font-family:'DM Sans',sans-serif}
     .fl-link-btn{display:inline-flex;align-items:center;justify-content:center}
+    .fl-link-btn-primary{background:linear-gradient(135deg, rgba(233,30,140,.9), rgba(124,140,255,.8));border-color:rgba(255,255,255,.18)}
+    .fl-conversion-card{margin-top:10px;background:linear-gradient(135deg, rgba(233,30,140,.14), rgba(30,106,233,.10));border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:12px;color:#fff;width:100%}
+    .fl-conversion-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+    .fl-conversion-kicker{font-size:10px;letter-spacing:1.8px;text-transform:uppercase;color:#f4b9dc}
+    .fl-conversion-title{font-size:14px;font-weight:700;line-height:1.4}
+    .fl-conversion-copy{font-size:11px;line-height:1.6;color:#d8c9ee;margin-bottom:10px}
+    #install-bar{margin:0 auto 10px;max-width:440px}
+    .fl-install-box{display:flex;justify-content:space-between;align-items:center;gap:12px;background:rgba(30,106,233,.12);border:1px solid rgba(121,198,255,.22);border-radius:16px;padding:10px 12px}
+    .fl-install-text{font-size:12px;color:#fff}.fl-install-sub{font-size:11px;color:#cfe1ff;margin-top:2px}
+    @media (max-width:520px){ .fl-conversion-head,.fl-install-box,.fl-sale-box{flex-direction:column;align-items:flex-start} }
   `;
   document.head.appendChild(style);
 

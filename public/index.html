@@ -783,6 +783,26 @@ footer {
   </div>
 </section>
 
+<hr class="divider"/>
+
+<section id="mobile-app">
+  <div class="container">
+    <div class="section-label reveal">Mobile first</div>
+    <h2 class="section-title reveal">Disponible dès maintenant sur <em>téléphone</em></h2>
+    <p class="section-desc reveal">Installe First Love comme une vraie app sur Android et iPhone depuis le navigateur, puis retrouve bientôt la version store native.</p>
+    <div class="features-grid reveal" style="margin-bottom:18px">
+      <div class="feat-card"><span class="feat-icon">📲</span><div class="feat-title">Installation immédiate</div><div class="feat-desc">Ajout à l’écran d’accueil Android/iPhone en quelques secondes.</div></div>
+      <div class="feat-card"><span class="feat-icon">💌</span><div class="feat-title">Démo déjà disponible</div><div class="feat-desc">Tu peux tester l’expérience avant d’acheter un plan mensuel.</div></div>
+      <div class="feat-card"><span class="feat-icon">🛍️</span><div class="feat-title">Préparation stores</div><div class="feat-desc">Google Play et App Store sont en cours de préparation pour la suite.</div></div>
+    </div>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap" class="reveal">
+      <a href="/app.html" class="btn-primary">Ouvrir l'app mobile</a>
+      <button class="btn-secondary" type="button" id="install-cta-secondary" style="display:none">Installer sur mon téléphone</button>
+    </div>
+    <p style="text-align:center;font-size:11px;color:var(--muted);margin-top:14px">Android : Chrome → Installer · iPhone : Safari → Partager → Sur l’écran d’accueil</p>
+  </div>
+</section>
+
 <!-- CTA FINAL -->
 <section style="text-align:center;padding:80px 24px 100px">
   <div class="section-label reveal">Prêt(e) ?</div>
@@ -896,16 +916,26 @@ window.addEventListener('beforeinstallprompt', (event) => {
   deferredInstallPrompt = event;
   const btn = document.getElementById('install-cta');
   if (btn) btn.style.display = 'inline-block';
+  if (installBtnSecondary) installBtnSecondary.style.display = 'inline-block';
 });
 const installBtn = document.getElementById('install-cta');
+const installBtnSecondary = document.getElementById('install-cta-secondary');
+function runInstallPrompt(btn){
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.catch(() => null).finally(() => {
+    deferredInstallPrompt = null;
+    if (installBtn) installBtn.style.display = 'none';
+    if (installBtnSecondary) installBtnSecondary.style.display = 'none';
+  });
+}
 if (installBtn) {
   installBtn.addEventListener('click', async () => {
-    if (!deferredInstallPrompt) return;
-    deferredInstallPrompt.prompt();
-    await deferredInstallPrompt.userChoice.catch(() => null);
-    deferredInstallPrompt = null;
-    installBtn.style.display = 'none';
+    runInstallPrompt(installBtn);
   });
+}
+if (installBtnSecondary) {
+  installBtnSecondary.addEventListener('click', () => runInstallPrompt(installBtnSecondary));
 }
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => null));
