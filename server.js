@@ -10,6 +10,42 @@ const PUBLIC_DIR = path.join(__dirname, "public");
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || "";
 const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514";
 
+function buildFallbackReply(messages = [], system = "") {
+  const lastUser = [...messages].reverse().find(message => message?.role === "user");
+  const input = String(lastUser?.content || "").trim();
+  const isBoy = /kaito|masculin|boy/i.test(system);
+  const affection = /lien\s*:\s*(\d+)/i.exec(system);
+  const bond = affection ? Number(affection[1]) : 60;
+  const prefix = isBoy ? "*te regarde calmement* " : "*se rapproche doucement* ";
+
+  if (!input) {
+    return isBoy
+      ? "...je suis là. Dis-moi ce que tu veux, et je t'écoute."
+      : "Je suis là... tu peux me parler, je t'écoute vraiment. ♡";
+  }
+
+  const lower = input.toLowerCase();
+  if (/(bonjour|salut|coucou|hello|hey)/i.test(lower)) {
+    return isBoy
+      ? `${prefix}Salut. Ça me fait plaisir que tu sois là.`
+      : `${prefix}Coucou... je suis contente de te voir. ♡`;
+  }
+  if (/(tu m'aimes|je t'aime|love)/i.test(lower)) {
+    return isBoy
+      ? `${prefix}Je m'attache à toi plus que je ne le montre. Niveau de lien: ${bond}/100.`
+      : `${prefix}Oui... énormément même. Niveau de lien: ${bond}/100. ♡`;
+  }
+  if (/(triste|mal|seul|seule|fatigué|fatigue)/i.test(lower)) {
+    return isBoy
+      ? `${prefix}Viens souffler un peu avec moi. On peut y aller doucement.`
+      : `${prefix}Oh... viens, reste un peu avec moi. On va traverser ça ensemble. ♡`;
+  }
+
+  return isBoy
+    ? `${prefix}J'ai bien lu: "${input.slice(0, 120)}". Je reste avec toi, et je veux continuer cette conversation.`
+    : `${prefix}J'ai bien lu: "${input.slice(0, 120)}"... et j'ai envie de continuer à parler avec toi. ♡`;
+}
+
 function sendJson(res, status, data) {
   const body = JSON.stringify(data);
   res.writeHead(status, {"Content-Type":"application/json; charset=utf-8","Content-Length":Buffer.byteLength(body),"Cache-Control":"no-store"});
@@ -52,10 +88,13 @@ function serveStatic(res, pathname) {
 async function handleApi(req, res, pathname) {
   if (req.method === "GET" && pathname === "/api/health") return sendJson(res, 200, { ok: true, service: "first-love-app", anthropicConfigured: Boolean(ANTHROPIC_API_KEY), model: ANTHROPIC_MODEL });
   if (req.method === "POST" && pathname === "/api/chat") {
-    if (!ANTHROPIC_API_KEY) return sendJson(res, 500, { ok: false, error: "ANTHROPIC_API_KEY manquante sur le serveur." });
     const body = await readBody(req);
     const messages = Array.isArray(body.messages) ? body.messages : [];
     const system = String(body.system || "");
+    if (!ANTHROPIC_API_KEY) {
+      const reply = buildFallbackReply(messages, system);
+      return sendJson(res, 200, { ok: true, reply, fallback: true });
+    }
     try {
       const upstream = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
