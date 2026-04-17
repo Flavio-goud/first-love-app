@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>First Love — démo</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--pink:#e91e8c;--blue:#1e6ae9;--dark:#08050f;--card:#1a1030;--text:#f0e6ff;--muted:#9977bb;--border:rgba(255,255,255,0.09)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--dark);color:var(--text);min-height:100vh;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+#stars{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.star{position:absolute;border-radius:50%;background:white;animation:twinkle var(--d) ease-in-out infinite;animation-delay:var(--delay)}
+@keyframes twinkle{0%,100%{opacity:0.1}50%{opacity:0.6}}
+
+/* LANG SCREEN */
+#lang-screen{position:fixed;inset:0;background:var(--dark);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;transition:opacity 0.7s}
+#lang-screen.out{opacity:0;pointer-events:none}
+.lang-logo{font-family:'Playfair Display',serif;font-size:48px;font-style:italic;font-weight:400;margin-bottom:6px;text-align:center}
+.lang-tagline{font-size:12px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-bottom:40px;text-align:center}
+.lang-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:280px}
+.lang-btn{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:16px;padding:14px 20px;cursor:pointer;transition:all 0.25s;display:flex;align-items:center;gap:12px;font-family:'DM Sans',sans-serif}
+.lang-btn:hover{border-color:var(--pink);background:rgba(233,30,140,0.08);transform:translateY(-2px)}
+.lang-flag{font-size:22px}
+.lang-info{}
+.lang-name{font-size:14px;font-weight:500;color:var(--text);text-align:left}
+.lang-sub{font-size:10px;color:var(--muted);text-align:left}
+
+/* TITLE SCREEN */
+#title-screen{position:fixed;inset:0;background:var(--dark);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;transition:opacity 0.7s;display:none}
+#title-screen.show{display:flex}
+#title-screen.out{opacity:0;pointer-events:none}
+.title-logo{font-family:'Playfair Display',serif;font-size:52px;font-style:italic;font-weight:400;text-align:center;margin-bottom:6px}
+.title-sub{font-size:11px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-bottom:28px}
+.hearts-float{font-size:26px;margin:0 0 28px;animation:float 2s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+.choose-lbl{font-size:12px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:18px}
+.char-choice{display:flex;gap:18px}
+.choice-card{background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:20px 26px;cursor:pointer;transition:all 0.3s;text-align:center}
+.choice-card:hover{transform:translateY(-4px)}
+.choice-card.girl:hover{border-color:var(--pink)}
+.choice-card.boy:hover{border-color:var(--blue)}
+.choice-name{font-family:'Playfair Display',serif;font-size:18px;font-style:italic;margin-top:8px}
+.choice-trait{font-size:10px;color:var(--muted);margin-top:3px;letter-spacing:0.5px}
+.lang-change{margin-top:24px;background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:underline;text-underline-offset:3px}
+.lang-change:hover{color:var(--text)}
+
+/* MAIN APP */
+#main-app{display:none;max-width:440px;margin:0 auto;padding:12px;position:relative;z-index:1}
+#main-app.visible{display:block}
+#app-title{font-family:'Playfair Display',serif;font-style:italic;font-size:22px;text-align:center;padding:10px 0 2px;letter-spacing:1px}
+.app-tagline{font-size:10px;text-align:center;color:var(--muted);letter-spacing:3px;margin-bottom:10px;text-transform:uppercase}
+#screen{border-radius:28px;border:2px solid;padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;overflow:hidden}
+#screen::before{content:'';position:absolute;inset:0;opacity:0.03;pointer-events:none;background-image:radial-gradient(circle,white 1px,transparent 1px);background-size:18px 18px}
+.girl-screen{background:linear-gradient(160deg,#1a0a2e,#2d0a3e);border-color:#e91e8c}
+.boy-screen{background:linear-gradient(160deg,#0a1a2e,#0a2840);border-color:#1e6ae9}
+#top-bar{width:100%;display:flex;justify-content:space-between;align-items:center}
+#name-tag{font-size:13px;font-weight:500;font-family:'Playfair Display',serif;font-style:italic}
+.girl-tag{color:#ff79c6}.boy-tag{color:#79c6ff}
+#link-hearts{font-size:11px}
+#bubble{background:rgba(255,255,255,0.94);border-radius:18px;border:1.5px solid;padding:10px 14px;font-size:13px;color:#1a0a2a;min-height:50px;line-height:1.6;width:100%}
+.girl-bubble{border-color:#ffb6e6}.boy-bubble{border-color:#b6d8ff;color:#0a0a1a}
+.bubble-tail{width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:10px solid rgba(255,255,255,0.94);margin:0 auto}
+#char-wrap{position:relative;width:200px;height:220px;transition:transform 0.3s ease}
+#stats-row{width:100%;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.stat-box{background:rgba(255,255,255,0.06);border-radius:10px;padding:5px 8px}
+.stat-lbl{font-size:9px;color:#cc99dd;margin-bottom:3px;letter-spacing:1px;text-transform:uppercase}
+.stat-bar{background:rgba(255,255,255,0.1);border-radius:3px;height:5px;overflow:hidden}
+.stat-fill{height:100%;border-radius:3px;transition:width 0.5s}
+#btns{display:flex;gap:5px;flex-wrap:wrap;justify-content:center}
+.btn{background:rgba(255,255,255,0.06);border:1px solid;border-radius:20px;padding:6px 12px;font-size:11px;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;color:var(--text)}
+.girl-btn{border-color:#d63fbf}.girl-btn:hover{background:#d63fbf;color:white;transform:scale(1.05)}
+.boy-btn{border-color:#1e6ae9}.boy-btn:hover{background:#1e6ae9;color:white;transform:scale(1.05)}
+#chat-row{display:flex;gap:6px;width:100%}
+#chat-in{flex:1;background:rgba(255,255,255,0.07);border:1px solid;border-radius:20px;color:white;padding:8px 14px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none}
+.girl-input{border-color:#7b3fa0}.girl-input:focus{border-color:#d63fbf}
+.boy-input{border-color:#1a4a7a}.boy-input:focus{border-color:#1e6ae9}
+#chat-in::placeholder{color:#9966aa}
+#send{border:none;color:white;border-radius:20px;padding:8px 18px;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500}
+.girl-send{background:#d63fbf}.boy-send{background:#1e6ae9}
+.thinking{display:inline-flex;gap:4px;align-items:center}
+.dot{width:6px;height:6px;border-radius:50%;background:#9977bb;animation:blink 1.2s infinite}
+.dot:nth-child(2){animation-delay:0.2s}.dot:nth-child(3){animation-delay:0.4s}
+@keyframes blink{0%,80%,100%{opacity:0.3}40%{opacity:1}}
+#custom-panel{background:rgba(255,255,255,0.04);border-radius:16px;border:1px solid var(--border);padding:10px;width:100%;display:none}
+#custom-panel.open{display:block}
+.c-row{display:flex;align-items:center;gap:7px;margin-bottom:8px;flex-wrap:wrap}
+.c-lbl{color:#cc99dd;font-size:11px;min-width:66px}
+.c-dot{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all 0.2s;flex-shrink:0}
+.c-dot.sel{border-color:white;transform:scale(1.2)}
+.c-sq{padding:3px 10px;border-radius:12px;font-size:10px;cursor:pointer;border:1px solid var(--border);color:#cc99dd;background:transparent;transition:all 0.2s;font-family:'DM Sans',sans-serif}
+.girl-sq.sel{background:#d63fbf;color:white;border-color:#d63fbf}
+.boy-sq.sel{background:#1e6ae9;color:white;border-color:#1e6ae9}
+#switch-btn{display:block;margin:8px auto 0;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:20px;padding:5px 16px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s}
+#switch-btn:hover{color:var(--text);border-color:rgba(255,255,255,0.3)}
+#lang-indicator{position:absolute;top:10px;right:10px;font-size:18px;cursor:pointer;opacity:0.6;transition:opacity 0.2s;z-index:10}
+#lang-indicator:hover{opacity:1}
+@media (max-width: 900px){
+  #main-app{max-width:520px;padding:16px}
+}
+@media (max-width: 680px){
+  .lang-logo{font-size:40px;padding:0 16px}
+  .lang-tagline{margin-bottom:28px;padding:0 16px;line-height:1.6}
+  .lang-grid{grid-template-columns:1fr;width:min(100%,360px)}
+  .char-choice{flex-direction:column;width:min(100%,340px)}
+  .choice-card{width:100%}
+  #main-app{max-width:100%;padding:10px 10px calc(18px + env(safe-area-inset-bottom, 0px))}
+  #screen{border-radius:24px;padding:12px}
+  #char-wrap{width:min(100%,190px);height:210px}
+  #chat-row{flex-direction:column}
+  #chat-in,#send{width:100%}
+  #send{min-height:44px}
+  #btns{gap:8px}
+  .btn{flex:1 1 calc(50% - 8px);min-height:42px;padding:10px 12px}
+  .c-row{align-items:flex-start}
+  .c-lbl{min-width:100%;margin-bottom:2px}
+  #custom-panel{padding:12px}
+}
+@media (max-width: 420px){
+  .title-logo{font-size:44px}
+  .title-sub,.choose-lbl{padding:0 16px;text-align:center}
+  #app-title{font-size:20px}
+  .app-tagline{letter-spacing:2px}
+  #bubble{font-size:12px;padding:10px 12px}
+  .stat-box{padding:6px}
+  .stat-lbl{font-size:8px}
+  .btn{font-size:10px}
+}
+</style>
+</head>
+<body>
+<div id="stars"></div>
+
+<!-- LANG SELECT -->
+<div id="lang-screen">
+  <div class="lang-logo">First Love</div>
+  <div class="lang-tagline">choose your language</div>
+  <div class="lang-grid">
+    <button class="lang-btn" onclick="setLang('fr')">
+      <span class="lang-flag">🇫🇷</span>
+      <div class="lang-info"><div class="lang-name">Français</div><div class="lang-sub">France · Belgique · Suisse</div></div>
+    </button>
+    <button class="lang-btn" onclick="setLang('en')">
+      <span class="lang-flag">🇬🇧</span>
+      <div class="lang-info"><div class="lang-name">English</div><div class="lang-sub">UK · US · Global</div></div>
+    </button>
+    <button class="lang-btn" onclick="setLang('es')">
+      <span class="lang-flag">🇪🇸</span>
+      <div class="lang-info"><div class="lang-name">Español</div><div class="lang-sub">España · LATAM</div></div>
+    </button>
+    <button class="lang-btn" onclick="setLang('pt')">
+      <span class="lang-flag">🇧🇷</span>
+      <div class="lang-info"><div class="lang-name">Português</div><div class="lang-sub">Brasil · Portugal</div></div>
+    </button>
+  </div>
+</div>
+
+<!-- TITLE SCREEN -->
+<div id="title-screen">
+  <div class="title-logo">First Love</div>
+  <div class="title-sub" id="ts-sub">✦ ton compagnon IA ✦</div>
+  <div class="hearts-float">♡ &nbsp;♥&nbsp; ♡</div>
+  <div class="choose-lbl" id="ts-choose">qui est ton premier amour ?</div>
+  <div class="char-choice">
+    <div class="choice-card girl" onclick="startApp('girl')">
+      <svg width="80" height="86" viewBox="0 0 80 86">
+        <ellipse cx="40" cy="58" rx="18" ry="16" fill="#9b3fcc"/>
+        <ellipse cx="40" cy="36" rx="22" ry="24" fill="#ffe0e6"/>
+        <ellipse cx="40" cy="21" rx="22" ry="13" fill="#4a1942"/>
+        <ellipse cx="20" cy="32" rx="8" ry="14" fill="#4a1942"/>
+        <ellipse cx="60" cy="32" rx="8" ry="14" fill="#4a1942"/>
+        <polygon points="25,27 18,9 32,21" fill="#4a1942"/>
+        <polygon points="55,27 62,9 48,21" fill="#4a1942"/>
+        <polygon points="26,25 20,11 31,20" fill="#ff79c6" opacity="0.5"/>
+        <polygon points="54,25 60,11 49,20" fill="#ff79c6" opacity="0.5"/>
+        <ellipse cx="29" cy="38" rx="7" ry="8" fill="white"/>
+        <ellipse cx="51" cy="38" rx="7" ry="8" fill="white"/>
+        <circle cx="30" cy="39" r="5" fill="#7c3aed"/>
+        <circle cx="52" cy="39" r="5" fill="#7c3aed"/>
+        <circle cx="32" cy="37" r="2" fill="white"/>
+        <circle cx="54" cy="37" r="2" fill="white"/>
+        <ellipse cx="23" cy="46" rx="6" ry="4" fill="#ff8faa" opacity="0.5"/>
+        <ellipse cx="57" cy="46" rx="6" ry="4" fill="#ff8faa" opacity="0.5"/>
+        <path d="M34 51 Q40 57 46 51" fill="none" stroke="#d63fbf" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div class="choice-name" style="color:#ff79c6" id="char-girl-name">Sakura</div>
+      <div class="choice-trait" id="char-girl-trait">timide · coquine · attachante</div>
+    </div>
+    <div class="choice-card boy" onclick="startApp('boy')">
+      <svg width="80" height="86" viewBox="0 0 80 86">
+        <ellipse cx="40" cy="60" rx="20" ry="16" fill="#1a4acc"/>
+        <ellipse cx="40" cy="36" rx="22" ry="24" fill="#ffe8d8"/>
+        <ellipse cx="40" cy="19" rx="22" ry="12" fill="#1a0a08"/>
+        <ellipse cx="18" cy="32" rx="8" ry="13" fill="#1a0a08"/>
+        <ellipse cx="62" cy="32" rx="8" ry="13" fill="#1a0a08"/>
+        <path d="M22 26 Q40 21 58 26" stroke="#1a0a08" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <ellipse cx="29" cy="38" rx="7" ry="8" fill="white"/>
+        <ellipse cx="51" cy="38" rx="7" ry="8" fill="white"/>
+        <circle cx="30" cy="39" r="5" fill="#1e6ae9"/>
+        <circle cx="52" cy="39" r="5" fill="#1e6ae9"/>
+        <circle cx="32" cy="37" r="2" fill="white"/>
+        <circle cx="54" cy="37" r="2" fill="white"/>
+        <ellipse cx="23" cy="46" rx="5" ry="3" fill="#e09070" opacity="0.4"/>
+        <ellipse cx="57" cy="46" rx="5" ry="3" fill="#e09070" opacity="0.4"/>
+        <path d="M34 52 Q40 57 46 52" fill="none" stroke="#1e6ae9" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div class="choice-name" style="color:#79c6ff" id="char-boy-name">Kaito</div>
+      <div class="choice-trait" id="char-boy-trait">distant · intense · inattendu</div>
+    </div>
+  </div>
+  <button class="lang-change" onclick="backToLang()" id="ts-lang-change">← changer de langue</button>
+</div>
+
+<!-- MAIN APP -->
+<div id="main-app">
+  <div id="app-title">First Love</div>
+  <div id="monetization-bar"></div>
+  <div class="app-tagline" id="app-tagline">✦ ton compagnon IA ✦</div>
+  <div id="screen" class="girl-screen">
+    <div id="lang-indicator" onclick="backToLang()" title="Change language">🌐</div>
+    <div id="top-bar">
+      <div id="name-tag" class="girl-tag">✦ <span id="dname">Sakura</span></div>
+      <div id="link-hearts"></div>
+    </div>
+    <div id="bubble" class="girl-bubble"></div>
+    <div class="bubble-tail"></div>
+    <div id="char-wrap"></div>
+    <div id="stats-row">
+      <div class="stat-box"><div class="stat-lbl" id="sl-mood">Humeur</div><div class="stat-bar"><div class="stat-fill" id="sf-mood" style="width:70%;background:#e91e8c"></div></div></div>
+      <div class="stat-box"><div class="stat-lbl" id="sl-hunger">Faim</div><div class="stat-bar"><div class="stat-fill" id="sf-hunger" style="width:55%;background:#ff9800"></div></div></div>
+      <div class="stat-box"><div class="stat-lbl" id="sl-att">Attention</div><div class="stat-bar"><div class="stat-fill" id="sf-att" style="width:75%;background:#9c27b0"></div></div></div>
+    </div>
+    <div id="btns"></div>
+    <div id="custom-panel"></div>
+    <div id="chat-row">
+      <input id="chat-in" maxlength="180" onkeydown="if(event.key==='Enter')sendMsg()"/>
+      <button id="send" onclick="sendMsg()">→</button>
+    </div>
+  </div>
+  <button id="switch-btn" onclick="goHome()"></button>
+</div>
+
+<script>
+// ─── TRADUCTIONS ───────────────────────────────────────────────────────────────
+const T = {
+  fr: {
+    tagline: '✦ ton compagnon IA ✦',
+    tsTagline: '✦ ton compagnon IA ✦',
+    tsChoose: 'qui est ton premier amour ?',
+    girlTrait: 'timide · coquine · attachante',
+    boyTrait: 'distant · intense · inattendu',
+    langChange: '← changer de langue',
+    switchBtn: '← changer de personnage',
+    statMood: 'Humeur', statHunger: 'Faim', statAtt: 'Attention',
+    link: 'Lien',
+    btnFeed: '🍡 Nourrir', btnPet: '✨ Câlin', btnPlay: '🎮 Jouer', btnFlirt: '💌 Flirter', btnApp: '🎨 Apparence',
+    placeholder: 'Dis lui quelque chose...',
+    nameLbl: 'Prénom', nameOk: 'OK',
+    hairLbl: 'Cheveux', styleLbl: 'Coiffure', eyeLbl: 'Yeux',
+    sizeLbl: 'Taille', outfitLbl: 'Tenue',
+    styleCat: 'Oreilles chat', styleTwin: 'Twintails', styleBun: 'Chignon', styleShort: 'Court',
+    sizeS: 'Petite', sizeM: 'Moyenne', sizeL: 'Grande',
+    sizeSB: 'Petit', sizeMB: 'Moyen', sizeLB: 'Grand',
+    outfitPurple: 'Violet', outfitPink: 'Rose', outfitDark: 'Sombre', outfitBlue: 'Bleu',
+    outfitNavy: 'Bleu nuit', outfitKhaki: 'Kaki', outfitBlack: 'Noir', outfitBurg: 'Bordeaux',
+    girlGreet: "Hm ? T'es là... *tire sur sa manche* ...je suis contente. Un peu. <span style='color:#d63fbf'>♡</span>",
+    boyGreet: "...tu es là. *lève les yeux une seconde* Bien. <span style='color:#1e6ae9'>✦</span>",
+    lonely_girl: ["...tu m'as oubliée ? *fixe la porte*","Je suis là tu sais. <span style='color:#d63fbf'>♡</span>","Toujours là ? *soupir*"],
+    lonely_boy: ["...","*regarde l'heure* <span style='color:#1e6ae9'>✦</span>","Toujours là ?"],
+    sysGirl: "Tu es Sakura, un personnage kawaii féminin dans une app style tamagotchi pour adultes appelée 'First Love'. Timide en surface, espiègle et coquine quand tu t'ouvres. Actions entre *astérisques*. Réponds en français, 1-3 phrases max. Niveau de lien : ",
+    sysBoy: "Tu es Kaito, un personnage masculin dans une app style tamagotchi pour adultes appelée 'First Love'. Discret, intense, paroles rares mais lourdes de sens. Actions entre *astérisques*. Réponds en français, 1-3 phrases max. Niveau de lien : ",
+  },
+  en: {
+    tagline: '✦ your AI companion ✦',
+    tsTagline: '✦ your AI companion ✦',
+    tsChoose: 'who is your first love?',
+    girlTrait: 'shy · playful · endearing',
+    boyTrait: 'distant · intense · unexpected',
+    langChange: '← change language',
+    switchBtn: '← change character',
+    statMood: 'Mood', statHunger: 'Hunger', statAtt: 'Attention',
+    link: 'Bond',
+    btnFeed: '🍡 Feed', btnPet: '✨ Cuddle', btnPlay: '🎮 Play', btnFlirt: '💌 Flirt', btnApp: '🎨 Looks',
+    placeholder: 'Say something to them...',
+    nameLbl: 'Name', nameOk: 'OK',
+    hairLbl: 'Hair', styleLbl: 'Style', eyeLbl: 'Eyes',
+    sizeLbl: 'Height', outfitLbl: 'Outfit',
+    styleCat: 'Cat ears', styleTwin: 'Twintails', styleBun: 'Bun', styleShort: 'Short',
+    sizeS: 'Small', sizeM: 'Medium', sizeL: 'Tall',
+    sizeSB: 'Short', sizeMB: 'Medium', sizeLB: 'Tall',
+    outfitPurple: 'Purple', outfitPink: 'Pink', outfitDark: 'Dark', outfitBlue: 'Blue',
+    outfitNavy: 'Navy', outfitKhaki: 'Khaki', outfitBlack: 'Black', outfitBurg: 'Burgundy',
+    girlGreet: "Hm? You're here... *tugs her sleeve* ...I'm glad. A little. <span style='color:#d63fbf'>♡</span>",
+    boyGreet: "...you're here. *glances up for a second* Good. <span style='color:#1e6ae9'>✦</span>",
+    lonely_girl: ["...did you forget about me? *stares at the door*","I'm here, you know. <span style='color:#d63fbf'>♡</span>","Still there? *sighs*"],
+    lonely_boy: ["...","*checks the time* <span style='color:#1e6ae9'>✦</span>","Still there?"],
+    sysGirl: "You are Sakura, a kawaii female character in an adult tamagotchi-style app called 'First Love'. Shy on the surface, playful and flirty when you open up. Actions in *asterisks*. Reply in English, max 1-3 sentences. Bond level: ",
+    sysBoy: "You are Kaito, a male character in an adult tamagotchi-style app called 'First Love'. Reserved, intense, words are rare but meaningful. Actions in *asterisks*. Reply in English, max 1-3 sentences. Bond level: ",
+  },
+  es: {
+    tagline: '✦ tu compañero IA ✦',
+    tsTagline: '✦ tu compañero IA ✦',
+    tsChoose: '¿quién es tu primer amor?',
+    girlTrait: 'tímida · traviesa · adorable',
+    boyTrait: 'distante · intenso · inesperado',
+    langChange: '← cambiar idioma',
+    switchBtn: '← cambiar personaje',
+    statMood: 'Humor', statHunger: 'Hambre', statAtt: 'Atención',
+    link: 'Vínculo',
+    btnFeed: '🍡 Dar de comer', btnPet: '✨ Abrazo', btnPlay: '🎮 Jugar', btnFlirt: '💌 Coquetear', btnApp: '🎨 Apariencia',
+    placeholder: 'Dile algo...',
+    nameLbl: 'Nombre', nameOk: 'OK',
+    hairLbl: 'Pelo', styleLbl: 'Peinado', eyeLbl: 'Ojos',
+    sizeLbl: 'Altura', outfitLbl: 'Ropa',
+    styleCat: 'Orejas de gato', styleTwin: 'Coletas', styleBun: 'Moño', styleShort: 'Corto',
+    sizeS: 'Pequeña', sizeM: 'Mediana', sizeL: 'Alta',
+    sizeSB: 'Bajo', sizeMB: 'Mediano', sizeLB: 'Alto',
+    outfitPurple: 'Morado', outfitPink: 'Rosa', outfitDark: 'Oscuro', outfitBlue: 'Azul',
+    outfitNavy: 'Marino', outfitKhaki: 'Caqui', outfitBlack: 'Negro', outfitBurg: 'Burdeos',
+    girlGreet: "¿Hm? Estás aquí... *tira de su manga* ...me alegra. Un poco. <span style='color:#d63fbf'>♡</span>",
+    boyGreet: "...estás aquí. *levanta los ojos un segundo* Bien. <span style='color:#1e6ae9'>✦</span>",
+    lonely_girl: ["...¿me olvidaste? *mira la puerta*","Estoy aquí, ¿sabes? <span style='color:#d63fbf'>♡</span>","¿Sigues ahí? *suspira*"],
+    lonely_boy: ["...","*mira la hora* <span style='color:#1e6ae9'>✦</span>","¿Sigues ahí?"],
+    sysGirl: "Eres Sakura, un personaje kawaii femenino en una app estilo tamagotchi para adultos llamada 'First Love'. Tímida por fuera, juguetona y coqueta cuando te abres. Acciones entre *asteriscos*. Responde en español, máximo 1-3 frases. Nivel de vínculo: ",
+    sysBoy: "Eres Kaito, un personaje masculino en una app estilo tamagotchi para adultos llamada 'First Love'. Reservado, intenso, pocas palabras pero con gran significado. Acciones entre *asteriscos*. Responde en español, máximo 1-3 frases. Nivel de vínculo: ",
+  },
+  pt: {
+    tagline: '✦ seu companheiro IA ✦',
+    tsTagline: '✦ seu companheiro IA ✦',
+    tsChoose: 'quem é seu primeiro amor?',
+    girlTrait: 'tímida · travessa · encantadora',
+    boyTrait: 'distante · intenso · inesperado',
+    langChange: '← mudar idioma',
+    switchBtn: '← trocar personagem',
+    statMood: 'Humor', statHunger: 'Fome', statAtt: 'Atenção',
+    link: 'Vínculo',
+    btnFeed: '🍡 Alimentar', btnPet: '✨ Abraçar', btnPlay: '🎮 Jogar', btnFlirt: '💌 Flertar', btnApp: '🎨 Aparência',
+    placeholder: 'Diga algo...',
+    nameLbl: 'Nome', nameOk: 'OK',
+    hairLbl: 'Cabelo', styleLbl: 'Penteado', eyeLbl: 'Olhos',
+    sizeLbl: 'Altura', outfitLbl: 'Roupa',
+    styleCat: 'Orelhas de gato', styleTwin: 'Twintails', styleBun: 'Coque', styleShort: 'Curto',
+    sizeS: 'Pequena', sizeM: 'Média', sizeL: 'Alta',
+    sizeSB: 'Baixo', sizeMB: 'Médio', sizeLB: 'Alto',
+    outfitPurple: 'Roxo', outfitPink: 'Rosa', outfitDark: 'Escuro', outfitBlue: 'Azul',
+    outfitNavy: 'Azul marinho', outfitKhaki: 'Cáqui', outfitBlack: 'Preto', outfitBurg: 'Borgonha',
+    girlGreet: "Hm? Você está aqui... *puxa a manga* ...estou contente. Um pouco. <span style='color:#d63fbf'>♡</span>",
+    boyGreet: "...você está aqui. *olha por um segundo* Bem. <span style='color:#1e6ae9'>✦</span>",
+    lonely_girl: ["...você me esqueceu? *olha para a porta*","Estou aqui, sabia? <span style='color:#d63fbf'>♡</span>","Ainda aí? *suspira*"],
+    lonely_boy: ["...","*verifica a hora* <span style='color:#1e6ae9'>✦</span>","Ainda aí?"],
+    sysGirl: "Você é Sakura, um personagem kawaii feminino em um app estilo tamagotchi para adultos chamado 'First Love'. Tímida por fora, brincalhona e coquete quando se abre. Ações entre *asteriscos*. Responda em português, máximo 1-3 frases. Nível de vínculo: ",
+    sysBoy: "Você é Kaito, um personagem masculino em um app estilo tamagotchi para adultos chamado 'First Love'. Reservado, intenso, poucas palavras mas cheias de significado. Ações entre *asteriscos*. Responda em português, máximo 1-3 frases. Nível de vínculo: ",
+  }
+};
+
+let lang = 'fr';
+let currentChar = 'girl';
+let S = {mood:70,hunger:55,att:75,aff:0};
+let chatHistory = [];
+let isThinking = false;
+let charNames = {girl:'Sakura', boy:'Kaito'};
+let hairC1='#2d0a6e', hairC2='#3a1080', eyeC='#7c3aed', hairStyle='cat';
+let boyHairC='#1a0a08', boyEyeC='#1e6ae9', charScale=1;
+let blinkInterval = null;
+let decayInterval = null;
+
+function t(key) { return T[lang][key] || T['fr'][key] || key; }
+
+function setLang(l) {
+  lang = l;
+  document.getElementById('lang-screen').classList.add('out');
+  const ts = document.getElementById('title-screen');
+  ts.classList.add('show');
+  setTimeout(() => {
+    document.getElementById('ts-sub').textContent = t('tsTagline');
+    document.getElementById('ts-choose').textContent = t('tsChoose');
+    document.getElementById('char-girl-trait').textContent = t('girlTrait');
+    document.getElementById('char-boy-trait').textContent = t('boyTrait');
+    document.getElementById('ts-lang-change').textContent = t('langChange');
+  }, 100);
+}
+
+function backToLang() {
+  document.getElementById('lang-screen').classList.remove('out');
+  document.getElementById('title-screen').classList.remove('out');
+  document.getElementById('title-screen').classList.remove('show');
+  document.getElementById('main-app').classList.remove('visible');
+  if(blinkInterval) clearInterval(blinkInterval);
+  if(decayInterval) clearInterval(decayInterval);
+}
+
+// ─── SVG ──────────────────────────────────────────────────────────────────────
+function girlSVG(hc1,hc2,eyeC,style){
+  const ears = style==='cat'
+    ? `<polygon points="68,58 56,28 80,48" fill="${hc1}"/><polygon points="132,58 144,28 120,48" fill="${hc1}"/><polygon points="69,56 59,32 78,48" fill="#ff79c6" opacity="0.45"/><polygon points="131,56 141,32 122,48" fill="#ff79c6" opacity="0.45"/>`
+    : style==='twin' ? `<ellipse cx="62" cy="38" rx="12" ry="18" fill="${hc1}"/><ellipse cx="138" cy="38" rx="12" ry="18" fill="${hc1}"/>`
+    : style==='bun' ? `<ellipse cx="100" cy="40" rx="20" ry="18" fill="${hc1}"/>`
+    : `<ellipse cx="60" cy="70" rx="10" ry="14" fill="${hc1}"/><ellipse cx="140" cy="70" rx="10" ry="14" fill="${hc1}"/>`;
+  return `<svg id="char-svg" width="200" height="220" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
+  <defs><radialGradient id="sg" cx="50%" cy="40%" r="55%"><stop offset="0%" stop-color="#ffe8f0"/><stop offset="100%" stop-color="#ffd0e0"/></radialGradient>
+  <radialGradient id="cg" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ff8faa" stop-opacity="0.8"/><stop offset="100%" stop-color="#ff8faa" stop-opacity="0"/></radialGradient></defs>
+  <ellipse cx="100" cy="162" rx="38" ry="30" fill="#9b3fcc" id="body"/>
+  <ellipse cx="100" cy="150" rx="30" ry="17" fill="#b060e0" id="chest"/>
+  <path d="M82 140 Q100 148 118 140" fill="none" stroke="#e0a0ff" stroke-width="1.5"/>
+  <path d="M66 148 Q52 155 48 168" stroke="#ffd0e0" stroke-width="13" stroke-linecap="round" fill="none"/>
+  <path d="M134 148 Q148 155 152 168" stroke="#ffd0e0" stroke-width="13" stroke-linecap="round" fill="none"/>
+  <circle cx="46" cy="171" r="8" fill="#ffe8f0"/><circle cx="154" cy="171" r="8" fill="#ffe8f0"/>
+  <ellipse cx="100" cy="192" rx="44" ry="15" fill="#7a2aaa" id="skirt"/>
+  <rect x="86" y="192" width="12" height="20" rx="6" fill="#ffd0e0"/>
+  <rect x="102" y="192" width="12" height="20" rx="6" fill="#ffd0e0"/>
+  <ellipse cx="92" cy="213" rx="9" ry="5" fill="#3a1a5a"/><ellipse cx="108" cy="213" rx="9" ry="5" fill="#3a1a5a"/>
+  <rect x="90" y="118" width="20" height="18" rx="4" fill="#ffd8e8"/>
+  <ellipse cx="100" cy="96" rx="42" ry="44" fill="url(#sg)"/>
+  <ellipse cx="100" cy="62" rx="42" ry="26" fill="${hc1}"/>
+  <ellipse cx="57" cy="82" rx="13" ry="30" fill="${hc1}"/>
+  <ellipse cx="143" cy="82" rx="13" ry="30" fill="${hc1}"/>
+  ${ears}
+  <ellipse cx="58" cy="96" rx="10" ry="12" fill="#ffc8dc"/><ellipse cx="142" cy="96" rx="10" ry="12" fill="#ffc8dc"/>
+  <ellipse cx="58" cy="96" rx="6" ry="8" fill="#ffaac8"/><ellipse cx="142" cy="96" rx="6" ry="8" fill="#ffaac8"/>
+  <path d="M62 80 Q68 55 80 70" fill="${hc2}"/>
+  <path d="M75 68 Q85 48 95 65" fill="${hc2}"/>
+  <path d="M105 65 Q115 48 125 68" fill="${hc2}"/>
+  <path d="M138 80 Q132 55 120 70" fill="${hc2}"/>
+  <path d="M78 74 Q84 70 90 73" stroke="#5a2070" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M110 73 Q116 70 122 74" stroke="#5a2070" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <ellipse cx="86" cy="92" rx="12" ry="13" fill="white"/><ellipse cx="114" cy="92" rx="12" ry="13" fill="white"/>
+  <ellipse cx="87" cy="93" rx="9" ry="10" fill="${eyeC}" id="iris-l"/><ellipse cx="115" cy="93" rx="9" ry="10" fill="${eyeC}" id="iris-r"/>
+  <ellipse cx="88" cy="94" rx="5" ry="6" fill="#1a0030"/><ellipse cx="116" cy="94" rx="5" ry="6" fill="#1a0030"/>
+  <circle cx="91" cy="89" r="3" fill="white" opacity="0.9"/><circle cx="119" cy="89" r="3" fill="white" opacity="0.9"/>
+  <circle cx="84" cy="97" r="1.5" fill="white" opacity="0.5"/><circle cx="112" cy="97" r="1.5" fill="white" opacity="0.5"/>
+  <line x1="76" y1="81" x2="73" y2="77" stroke="#3a1a5a" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="79" y1="79" x2="78" y2="74" stroke="#3a1a5a" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="96" y1="80" x2="98" y2="75" stroke="#3a1a5a" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="104" y1="80" x2="102" y2="75" stroke="#3a1a5a" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="121" y1="79" x2="122" y2="74" stroke="#3a1a5a" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="124" y1="81" x2="127" y2="77" stroke="#3a1a5a" stroke-width="1.5" stroke-linecap="round"/>
+  <ellipse cx="72" cy="104" rx="12" ry="7" fill="url(#cg)" id="blush-l" opacity="0.6"/>
+  <ellipse cx="128" cy="104" rx="12" ry="7" fill="url(#cg)" id="blush-r" opacity="0.6"/>
+  <ellipse cx="100" cy="105" rx="3" ry="2" fill="#ffaabb" opacity="0.6"/>
+  <path d="M92 114 Q100 121 108 114" fill="none" stroke="#d63fbf" stroke-width="2.5" stroke-linecap="round" id="mouth"/>
+  <path d="M96 114 Q100 117 104 114" fill="#ff79c6" opacity="0.3"/>
+  <circle cx="78" cy="68" r="6" fill="#ff79c6" opacity="0.9"/>
+  <circle cx="78" cy="68" r="3" fill="white" opacity="0.7"/>
+</svg>`;
+}
+
+function boySVG(hc,eyeC){
+  return `<svg id="char-svg" width="200" height="220" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
+  <defs><radialGradient id="bg2" cx="50%" cy="40%" r="55%"><stop offset="0%" stop-color="#fff0e4"/><stop offset="100%" stop-color="#ffe0c8"/></radialGradient>
+  <radialGradient id="cg2" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#e09070" stop-opacity="0.5"/><stop offset="100%" stop-color="#e09070" stop-opacity="0"/></radialGradient></defs>
+  <rect x="66" y="130" width="68" height="60" rx="10" fill="#1a3a6a" id="body"/>
+  <rect x="72" y="128" width="56" height="24" rx="8" fill="#1e4d8c" id="shirt"/>
+  <path d="M90 132 L100 145 L110 132" fill="none" stroke="#3a6aaa" stroke-width="1.5"/>
+  <path d="M68 138 Q50 148 46 165" stroke="#ffe0c8" stroke-width="14" stroke-linecap="round" fill="none"/>
+  <path d="M132 138 Q150 148 154 165" stroke="#ffe0c8" stroke-width="14" stroke-linecap="round" fill="none"/>
+  <circle cx="44" cy="168" r="9" fill="#fff0e4"/><circle cx="156" cy="168" r="9" fill="#fff0e4"/>
+  <rect x="76" y="188" width="16" height="24" rx="7" fill="#0d2244"/>
+  <rect x="108" y="188" width="16" height="24" rx="7" fill="#0d2244"/>
+  <ellipse cx="84" cy="213" rx="10" ry="5" fill="#1a1a2a"/><ellipse cx="116" cy="213" rx="10" ry="5" fill="#1a1a2a"/>
+  <rect x="90" y="118" width="20" height="18" rx="4" fill="#ffe8d0"/>
+  <ellipse cx="100" cy="92" rx="44" ry="46" fill="url(#bg2)"/>
+  <ellipse cx="100" cy="56" rx="44" ry="22" fill="${hc}"/>
+  <ellipse cx="56" cy="72" rx="12" ry="26" fill="${hc}"/>
+  <ellipse cx="144" cy="72" rx="12" ry="26" fill="${hc}"/>
+  <path d="M68 76 Q80 52 92 70" fill="${hc}" opacity="0.8"/>
+  <path d="M88 66 Q100 44 112 68" fill="${hc}" opacity="0.9"/>
+  <path d="M115 72 Q128 52 136 72" fill="${hc}" opacity="0.7"/>
+  <ellipse cx="56" cy="92" rx="10" ry="13" fill="#ffe0c8"/><ellipse cx="144" cy="92" rx="10" ry="13" fill="#ffe0c8"/>
+  <ellipse cx="56" cy="92" rx="6" ry="8" fill="#f0c8a8"/><ellipse cx="144" cy="92" rx="6" ry="8" fill="#f0c8a8"/>
+  <path d="M76 72 Q84 67 92 71" stroke="${hc}" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <path d="M108 71 Q116 67 124 72" stroke="${hc}" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <ellipse cx="86" cy="92" rx="13" ry="14" fill="white"/><ellipse cx="114" cy="92" rx="13" ry="14" fill="white"/>
+  <ellipse cx="87" cy="93" rx="10" ry="11" fill="${eyeC}" id="iris-l"/><ellipse cx="115" cy="93" rx="10" ry="11" fill="${eyeC}" id="iris-r"/>
+  <ellipse cx="88" cy="94" rx="6" ry="7" fill="#000820"/><ellipse cx="116" cy="94" rx="6" ry="7" fill="#000820"/>
+  <circle cx="92" cy="88" r="3.5" fill="white" opacity="0.9"/><circle cx="120" cy="88" r="3.5" fill="white" opacity="0.9"/>
+  <ellipse cx="70" cy="104" rx="11" ry="6" fill="url(#cg2)" id="blush-l" opacity="0.4"/>
+  <ellipse cx="130" cy="104" rx="11" ry="6" fill="url(#cg2)" id="blush-r" opacity="0.4"/>
+  <path d="M97 106 Q100 112 103 106" fill="none" stroke="#c09070" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M91 118 Q100 124 109 118" fill="none" stroke="#1e6ae9" stroke-width="2.5" stroke-linecap="round" id="mouth"/>
+  <circle cx="146" cy="100" r="3" fill="#1e6ae9" opacity="0.8"/>
+  <circle cx="146" cy="107" r="2" fill="#1e6ae9" opacity="0.6"/>
+</svg>`;
+}
+
+// ─── FACE & BOUNCE ────────────────────────────────────────────────────────────
+function setFace(type){
+  const m=document.getElementById('mouth');
+  const bl=document.getElementById('blush-l'), br=document.getElementById('blush-r');
+  if(!m) return;
+  if(currentChar==='girl'){
+    const faces={happy:{d:'M90 114 Q100 123 110 114',op:'0.7'},shy:{d:'M93 116 Q100 121 107 116',op:'1'},sad:{d:'M91 118 Q100 112 109 118',op:'0.2'},smirk:{d:'M91 114 Q102 122 108 113',op:'0.5'},neutral:{d:'M92 114 Q100 121 108 114',op:'0.6'}};
+    const f=faces[type]||faces.neutral;
+    m.setAttribute('d',f.d); if(bl)bl.setAttribute('opacity',f.op); if(br)br.setAttribute('opacity',f.op);
+  } else {
+    const faces={happy:{d:'M88 118 Q100 126 112 118'},shy:{d:'M90 120 Q100 125 110 120'},sad:{d:'M88 122 Q100 116 112 122'},smirk:{d:'M88 118 Q104 126 110 117'},neutral:{d:'M91 118 Q100 124 109 118'}};
+    m.setAttribute('d',(faces[type]||faces.neutral).d);
+    if(bl)bl.setAttribute('opacity',type==='shy'?'0.6':'0.4');
+    if(br)br.setAttribute('opacity',type==='shy'?'0.6':'0.4');
+  }
+}
+function bounce(){
+  const w=document.getElementById('char-wrap');
+  const s=charScale;
+  w.style.transform=`scale(${s}) translateY(-8px)`;
+  setTimeout(()=>{w.style.transform=`scale(${s})`;},320);
+}
+function startBlink(){
+  if(blinkInterval) clearInterval(blinkInterval);
+  blinkInterval=setInterval(()=>{
+    const il=document.getElementById('iris-l'), ir=document.getElementById('iris-r');
+    if(!il) return;
+    il.setAttribute('ry','1'); ir.setAttribute('ry','1');
+    setTimeout(()=>{if(il)il.setAttribute('ry',currentChar==='girl'?'10':'11');if(ir)ir.setAttribute('ry',currentChar==='girl'?'10':'11');},130);
+  }, 3600+Math.random()*2000);
+}
+
+// ─── BARS ─────────────────────────────────────────────────────────────────────
+function updBars(){
+  document.getElementById('sf-mood').style.width=S.mood+'%';
+  document.getElementById('sf-hunger').style.width=S.hunger+'%';
+  document.getElementById('sf-att').style.width=S.att+'%';
+  const h=Math.min(5,Math.floor(S.aff/20));
+  const ac=currentChar==='girl'?'#ff79c6':'#79c6ff';
+  document.getElementById('link-hearts').innerHTML=`<span style="color:${ac}">${t('link')} : ${'♥'.repeat(h)}${'♡'.repeat(5-h)}</span>`;
+}
+
+// ─── ACTIONS ─────────────────────────────────────────────────────────────────
+const QUICK={
+  girl:{
+    feed:["Mmh... <span style='color:#d63fbf'>♡</span> c'était bon. *lèche le coin des lèvres*","*mange avec de grands yeux* T-tu m'as apporté ça ?"],
+    pet:["*frémit* Hé, préviens avant... *mais ne recule pas*","...okay c'est agréable. *soupir* Tu gagnes."],
+    play:["ATTEND— j'ai failli gagner là ! Revanche !","*lèvre pincée* Je joue pas à fond. Vraiment."],
+    flirt:["*détourne les yeux* Pfff... <span style='color:#d63fbf'>♡</span> ...arrête.","*respire fort* C'est ta faute ça."]
+  },
+  boy:{
+    feed:["*prend sans dire merci puis murmure* ...merci.","Hmm. C'est bien. <span style='color:#1e6ae9'>✦</span>"],
+    pet:["...je t'ai pas dit que tu pouvais. *ne bouge pas*","*se raidit puis se détend* Tch."],
+    play:["Je gagne. Toujours. <span style='color:#1e6ae9'>✦</span>","*concentré* Ne me distrait pas."],
+    flirt:["...tu fais ça exprès. *te regarde une seconde trop longtemps*","*pause* Répète ça. Lentement."]
+  }
+};
+
+function act(type){
+  if(type==='feed'){S.hunger=Math.min(100,S.hunger+22);S.mood=Math.min(100,S.mood+5);}
+  if(type==='pet'){S.mood=Math.min(100,S.mood+18);S.aff=Math.min(100,S.aff+7);}
+  if(type==='play'){S.mood=Math.min(100,S.mood+12);S.att=Math.min(100,S.att+18);S.aff=Math.min(100,S.aff+4);}
+  if(type==='flirt'){S.mood=Math.min(100,S.mood+8);S.aff=Math.min(100,S.aff+14);}
+  const arr=QUICK[currentChar][type];
+  document.getElementById('bubble').innerHTML=arr[Math.floor(Math.random()*arr.length)];
+  setFace(type==='flirt'?'shy':type==='play'?'smirk':'happy');
+  bounce(); updBars();
+}
+
+// ─── AI ───────────────────────────────────────────────────────────────────────
+async function sendMsg(){
+  if(isThinking) return;
+  const inp=document.getElementById('chat-in');
+  const msg=inp.value.trim(); if(!msg) return;
+  inp.value=''; isThinking=true;
+  S.aff=Math.min(100,S.aff+4); S.att=Math.min(100,S.att+8); updBars();
+  document.getElementById('bubble').innerHTML='<span class="thinking"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>';
+  const tier=S.aff<30?T[lang].tierLow||'début':S.aff<65?T[lang].tierMid||'moyen':'fort';
+  const sys=(currentChar==='girl'?t('sysGirl'):t('sysBoy'))+tier+`. Stats: mood ${Math.round(S.mood)}%, hunger ${Math.round(S.hunger)}%, attention ${Math.round(S.att)}%.`;
+  chatHistory.push({role:'user',content:msg});
+  if(chatHistory.length>20) chatHistory=chatHistory.slice(-20);
+  try {
+    const r=await fetch('/api/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({system:sys,messages:chatHistory})
+    });
+    const d=await r.json();
+    const reply=d.reply||d.content?.[0]?.text||'...';
+    chatHistory.push({role:'assistant',content:reply});
+    document.getElementById('bubble').innerHTML=reply;
+    const l=msg.toLowerCase();
+    setFace(l.match(/belle|beau|mignonne|cute|beautiful|bonita|linda|linda/)?'shy':l.match(/bonjour|salut|hello|hola|oi/)?'happy':'neutral');
+  } catch(e){
+    document.getElementById('bubble').innerHTML='Je suis un peu timide là... réessaie dans un instant.';
+    console.error(e);
+  }
+  bounce(); isThinking=false;
+}
+
+// ─── RENDER UI ────────────────────────────────────────────────────────────────
+function renderChar(){
+  const w=document.getElementById('char-wrap');
+  w.innerHTML=currentChar==='girl'?girlSVG(hairC1,hairC2,eyeC,hairStyle):boySVG(boyHairC,boyEyeC);
+  startBlink();
+}
+function renderButtons(){
+  const isG=currentChar==='girl', cls=isG?'girl-btn':'boy-btn';
+  document.getElementById('btns').innerHTML=
+    `<button class="btn ${cls}" onclick="act('feed')">${t('btnFeed')}</button>
+     <button class="btn ${cls}" onclick="act('pet')">${t('btnPet')}</button>
+     <button class="btn ${cls}" onclick="act('play')">${t('btnPlay')}</button>
+     <button class="btn ${cls}" onclick="act('flirt')">${t('btnFlirt')}</button>
+     <button class="btn ${cls}" onclick="toggleCustom()">${t('btnApp')}</button>`;
+}
+function renderPanel(){
+  const isG=currentChar==='girl', sq=isG?'girl-sq':'boy-sq';
+  const nm=charNames[currentChar];
+  if(isG){
+    document.getElementById('custom-panel').innerHTML=`
+    <div class="c-row"><span class="c-lbl">${t('nameLbl')}</span><input id="name-in" maxlength="12" value="${nm}" style="background:rgba(255,255,255,0.08);border:1px solid #7b3fa0;border-radius:12px;color:white;padding:4px 10px;font-size:11px;outline:none;font-family:'DM Sans',sans-serif;width:100px"/><button class="btn girl-btn" onclick="applyName()" style="padding:4px 10px;font-size:10px">${t('nameOk')}</button></div>
+    <div class="c-row"><span class="c-lbl">${t('hairLbl')}</span>
+      <div class="c-dot sel" style="background:#2d0a6e" onclick="setGH(this,'#2d0a6e','#3a1080')"></div>
+      <div class="c-dot" style="background:#8B0000" onclick="setGH(this,'#8B0000','#b22020')"></div>
+      <div class="c-dot" style="background:#1a5c2a" onclick="setGH(this,'#1a5c2a','#2a8a3e')"></div>
+      <div class="c-dot" style="background:#0a3a7a" onclick="setGH(this,'#0a3a7a','#1a5aaa')"></div>
+      <div class="c-dot" style="background:#c08000" onclick="setGH(this,'#c08000','#e0a820')"></div>
+      <div class="c-dot" style="background:#cccccc;border:1px solid #999" onclick="setGH(this,'#cccccc','#e8e8e8')"></div>
+      <div class="c-dot" style="background:#c040a0" onclick="setGH(this,'#c040a0','#e060c0')"></div>
+      <div class="c-dot" style="background:#c87020" onclick="setGH(this,'#c87020','#e09040')"></div>
+    </div>
+    <div class="c-row"><span class="c-lbl">${t('styleLbl')}</span>
+      <button class="c-sq ${sq} sel" onclick="setGS(this,'cat')">${t('styleCat')}</button>
+      <button class="c-sq ${sq}" onclick="setGS(this,'twin')">${t('styleTwin')}</button>
+      <button class="c-sq ${sq}" onclick="setGS(this,'bun')">${t('styleBun')}</button>
+      <button class="c-sq ${sq}" onclick="setGS(this,'short')">${t('styleShort')}</button>
+    </div>
+    <div class="c-row"><span class="c-lbl">${t('eyeLbl')}</span>
+      <div class="c-dot sel" style="background:#7c3aed" onclick="setGE(this,'#7c3aed')"></div>
+      <div class="c-dot" style="background:#1a7acc" onclick="setGE(this,'#1a7acc')"></div>
+      <div class="c-dot" style="background:#1a8a3a" onclick="setGE(this,'#1a8a3a')"></div>
+      <div class="c-dot" style="background:#cc4400" onclick="setGE(this,'#cc4400')"></div>
+      <div class="c-dot" style="background:#cc0060" onclick="setGE(this,'#cc0060')"></div>
+      <div class="c-dot" style="background:#888" onclick="setGE(this,'#888')"></div>
+    </div>
+    <div class="c-row"><span class="c-lbl">${t('sizeLbl')}</span>
+      <button class="c-sq ${sq} sel" onclick="setSize(this,1)">${t('sizeS')}</button>
+      <button class="c-sq ${sq}" onclick="setSize(this,1.15)">${t('sizeM')}</button>
+      <button class="c-sq ${sq}" onclick="setSize(this,1.3)">${t('sizeL')}</button>
+    </div>
+    <div class="c-row"><span class="c-lbl">${t('outfitLbl')}</span>
+      <button class="c-sq ${sq} sel" onclick="setOut(this,'#9b3fcc','#b060e0','#7a2aaa')">${t('outfitPurple')}</button>
+      <button class="c-sq ${sq}" onclick="setOut(this,'#cc3f8f','#e060b0','#aa2a70')">${t('outfitPink')}</button>
+      <button class="c-sq ${sq}" onclick="setOut(this,'#2a2a4a','#3a3a6a','#1a1a3a')">${t('outfitDark')}</button>
+      <button class="c-sq ${sq}" onclick="setOut(this,'#1a4acc','#3060e0','#0a2aaa')">${t('outfitBlue')}</button>
+    </div>`;
+  } else {
+    document.getElementById('custom-panel').innerHTML=`
+    <div class="c-row"><span class="c-lbl">${t('nameLbl')}</span><input id="name-in" maxlength="12" value="${nm}" style="background:rgba(255,255,255,0.08);border:1px solid #1a4a7a;border-radius:12px;color:white;padding:4px 10px;font-size:11px;outline:none;font-family:'DM Sans',sans-serif;width:100px"/><button class="btn boy-btn" onclick="applyName()" style="padding:4px 10px;font-size:10px">${t('nameOk')}</button></div>
+    <div class="c-row"><span class="c-lbl">${t('hairLbl')}</span>
+      <div class="c-dot sel" style="background:#1a0a08" onclick="setBH(this,'#1a0a08')"></div>
+      <div class="c-dot" style="background:#8B0000" onclick="setBH(this,'#8B0000')"></div>
+      <div class="c-dot" style="background:#2d0a6e" onclick="setBH(this,'#2d0a6e')"></div>
+      <div class="c-dot" style="background:#0a3a7a" onclick="setBH(this,'#0a3a7a')"></div>
+      <div class="c-dot" style="background:#cccccc;border:1px solid #999" onclick="setBH(this,'#cccccc')"></div>
+      <div class="c-dot" style="background:#c87020" onclick="setBH(this,'#c87020')"></div>
+      <div class="c-dot" style="background:#1a5c2a" onclick="setBH(this,'#1a5c2a')"></div>
+    </div>
+    <div class="c-row"><span class="c-lbl">${t('eyeLbl')}</span>
+      <div class="c-dot sel" style="background:#1e6ae9" onclick="setBE(this,'#1e6ae9')"></div>
+      <div class="c-dot" style="background:#7c3aed" onclick="setBE(this,'#7c3aed')"></div>
+      <div class="c-dot" style="background:#1a8a3a" onclick="setBE(this,'#1a8a3a')"></div>
+      <div class="c-dot" style="background:#cc4400" onclick="setBE(this,'#cc4400')"></div>
+      <div class="c-dot" style="background:#888" onclick="setBE(this,'#888')"></div>
+    </div>
+    <div class="c-row"><span class="c-lbl">${t('sizeLbl')}</span>
+      <button class="c-sq ${sq} sel" onclick="setSize(this,1)">${t('sizeSB')}</button>
+      <button class="c-sq ${sq}" onclick="setSize(this,1.15)">${t('sizeMB')}</button>
+      <button class="c-sq ${sq}" onclick="setSize(this,1.3)">${t('sizeLB')}</button>
+    </div>
+    <div class="c-row"><span class="c-lbl">${t('outfitLbl')}</span>
+      <button class="c-sq ${sq} sel" onclick="setBOut(this,'#1a3a6a','#1e4d8c','#0d2244')">${t('outfitNavy')}</button>
+      <button class="c-sq ${sq}" onclick="setBOut(this,'#1a2a1a','#2a4a2a','#0d1a0d')">${t('outfitKhaki')}</button>
+      <button class="c-sq ${sq}" onclick="setBOut(this,'#2a2a2a','#3a3a3a','#1a1a1a')">${t('outfitBlack')}</button>
+      <button class="c-sq ${sq}" onclick="setBOut(this,'#4a1a2a','#6a2a3a','#2a0a1a')">${t('outfitBurg')}</button>
+    </div>`;
+  }
+}
+
+// ─── CUSTOM HANDLERS ─────────────────────────────────────────────────────────
+function selDot(el){document.querySelectorAll('.c-dot').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');}
+function setGH(el,c1,c2){selDot(el);hairC1=c1;hairC2=c2;renderChar();}
+function setGS(el,s){document.querySelectorAll('.girl-sq').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');hairStyle=s;renderChar();}
+function setGE(el,c){selDot(el);eyeC=c;const il=document.getElementById('iris-l'),ir=document.getElementById('iris-r');if(il)il.setAttribute('fill',c);if(ir)ir.setAttribute('fill',c);}
+function setBH(el,c){selDot(el);boyHairC=c;renderChar();}
+function setBE(el,c){selDot(el);boyEyeC=c;const il=document.getElementById('iris-l'),ir=document.getElementById('iris-r');if(il)il.setAttribute('fill',c);if(ir)ir.setAttribute('fill',c);}
+function setSize(el,s){document.querySelectorAll('[onclick^="setSize"]').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');charScale=s;const w=document.getElementById('char-wrap');w.style.transform=`scale(${s})`;w.style.transformOrigin='center bottom';}
+function setOut(el,b,c,sk){document.querySelectorAll('.girl-sq').forEach(e=>{if([t('outfitPurple'),t('outfitPink'),t('outfitDark'),t('outfitBlue')].includes(e.textContent))e.classList.remove('sel');});el.classList.add('sel');const bd=document.getElementById('body'),cs=document.getElementById('chest'),sk2=document.getElementById('skirt');if(bd)bd.setAttribute('fill',b);if(cs)cs.setAttribute('fill',c);if(sk2)sk2.setAttribute('fill',sk);}
+function setBOut(el,b,sh,l){document.querySelectorAll('.boy-sq').forEach(e=>{if([t('outfitNavy'),t('outfitKhaki'),t('outfitBlack'),t('outfitBurg')].includes(e.textContent))e.classList.remove('sel');});el.classList.add('sel');const bd=document.getElementById('body'),cs=document.getElementById('shirt'),legs=document.querySelectorAll('rect[rx="7"]');if(bd)bd.setAttribute('fill',b);if(cs)cs.setAttribute('fill',sh);legs.forEach(r=>r.setAttribute('fill',l));}
+function applyName(){const v=document.getElementById('name-in').value.trim()||charNames[currentChar];charNames[currentChar]=v;document.getElementById('dname').textContent=v;}
+function toggleCustom(){document.getElementById('custom-panel').classList.toggle('open');}
+
+// ─── START ────────────────────────────────────────────────────────────────────
+function startApp(char){
+  currentChar=char; S={mood:70,hunger:55,att:75,aff:0}; chatHistory=[];
+  document.getElementById('title-screen').classList.add('out');
+  setTimeout(()=>{
+    const app=document.getElementById('main-app'); app.classList.add('visible');
+    document.getElementById('app-tagline').textContent=t('tagline');
+    const scr=document.getElementById('screen');
+    scr.className=char==='girl'?'girl-screen':'boy-screen';
+    document.getElementById('name-tag').className=char==='girl'?'girl-tag':'boy-tag';
+    document.getElementById('name-tag').innerHTML=`✦ <span id="dname">${charNames[char]}</span>`;
+    document.getElementById('bubble').className=char==='girl'?'girl-bubble':'boy-bubble';
+    const inp=document.getElementById('chat-in');
+    inp.className=char==='girl'?'girl-input':'boy-input';
+    inp.placeholder=t('placeholder');
+    document.getElementById('send').className=char==='girl'?'girl-send':'boy-send';
+    document.getElementById('switch-btn').textContent=t('switchBtn');
+    document.getElementById('sf-mood').style.background=char==='girl'?'#e91e8c':'#1e6ae9';
+    document.getElementById('sf-att').style.background=char==='girl'?'#9c27b0':'#0eb8a0';
+    document.getElementById('sl-mood').textContent=t('statMood');
+    document.getElementById('sl-hunger').textContent=t('statHunger');
+    document.getElementById('sl-att').textContent=t('statAtt');
+    renderChar(); renderButtons(); renderPanel();
+    document.getElementById('bubble').innerHTML=char==='girl'?t('girlGreet'):t('boyGreet');
+    updBars();
+    if(decayInterval) clearInterval(decayInterval);
+    decayInterval=setInterval(()=>{
+      S.mood=Math.max(0,S.mood-1); S.hunger=Math.max(0,S.hunger-0.6); S.att=Math.max(0,S.att-1.2);
+      updBars();
+      if(S.att<20&&Math.random()<0.2&&!isThinking){
+        const arr=char==='girl'?t('lonely_girl'):t('lonely_boy');
+        document.getElementById('bubble').innerHTML=arr[Math.floor(Math.random()*arr.length)];
+        setFace('sad');
+      }
+    },5000);
+  },700);
+}
+function goHome(){
+  document.getElementById('main-app').classList.remove('visible');
+  document.getElementById('title-screen').classList.remove('out');
+  if(blinkInterval)clearInterval(blinkInterval);
+  if(decayInterval)clearInterval(decayInterval);
+}
+
+// Stars
+const starsEl=document.getElementById('stars');
+for(let i=0;i<100;i++){
+  const s=document.createElement('div'); s.className='star';
+  const sz=Math.random()*2.5+0.5;
+  s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${3+Math.random()*5}s;--delay:${Math.random()*6}s;`;
+  starsEl.appendChild(s);
+}
+
+<script>
+window.FIRST_LOVE_CONFIG = {
+  checkout: {
+    starter: 'https://buy.stripe.com/3cI28s4CR21i3XI9Kj3ZK07',
+    intime: 'https://buy.stripe.com/cNibJ2d9n49q1PA09J3ZK08',
+    premium: 'https://buy.stripe.com/8x29AU2uJaxOgKu9Kj3ZK09',
+    pack20: 'https://buy.stripe.com/dRmdRad9n35m9i27Cb3ZK0a'
+  }
+};
+
+(function(){
+  const plans = {
+    demo: { label: 'Démo', messages: 8 },
+    starter: { label: 'Découverte', messages: 50 },
+    intime: { label: 'Intime', messages: 100 },
+    premium: { label: 'Premier Amour', messages: Number.MAX_SAFE_INTEGER }
+  };
+
+  function periodKey(){
+    const d = new Date();
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}`;
+  }
+
+  function loadBilling(){
+    const raw = localStorage.getItem('fl_billing');
+    let billing = raw ? JSON.parse(raw) : { plan:'demo', used:0, extra:0, period:periodKey() };
+    if (!billing.plan) billing.plan = 'demo';
+    if (billing.period !== periodKey()) {
+      billing.used = 0;
+      billing.extra = 0;
+      billing.period = periodKey();
+    }
+    return billing;
+  }
+
+  function saveBilling(b){ localStorage.setItem('fl_billing', JSON.stringify(b)); }
+  function getAllowance(b){ return (plans[b.plan]?.messages ?? plans.demo.messages) + (b.extra || 0); }
+  function getRemaining(){
+    const b = loadBilling();
+    const allowance = getAllowance(b);
+    if (allowance >= Number.MAX_SAFE_INTEGER / 2) return Number.MAX_SAFE_INTEGER;
+    return Math.max(0, allowance - (b.used || 0));
+  }
+
+  function updateBar(){
+    const bar = document.getElementById('monetization-bar');
+    if (!bar) return;
+    const b = loadBilling();
+    const remaining = getRemaining();
+    const remainingLabel = remaining >= Number.MAX_SAFE_INTEGER / 2 ? 'Illimités' : `${remaining} restants`;
+    bar.innerHTML = `
+      <div class="fl-sale-box">
+        <div>
+          <div class="fl-sale-plan">Plan : <strong>${plans[b.plan]?.label || 'Démo'}</strong></div>
+          <div class="fl-sale-sub">Messages : <strong>${remainingLabel}</strong></div>
+        </div>
+        <div class="fl-sale-actions">
+          <button class="fl-mini-btn" onclick="window.open('/','_self')">Offres</button>
+          <button class="fl-mini-btn" onclick="window.open(window.FIRST_LOVE_CONFIG.checkout.pack20,'_blank','noopener')">+20</button>
+        </div>
+      </div>`;
+  }
+
+  function applyPaywallState(){
+    const remaining = getRemaining();
+    const input = document.getElementById('chat-in');
+    const send = document.getElementById('send');
+    if (!input || !send) return;
+    if (remaining <= 0) {
+      input.placeholder = 'Messages épuisés — prends un plan ou un pack +20.';
+      input.disabled = true;
+      send.disabled = true;
+      send.style.opacity = '0.6';
+      if (!document.getElementById('fl-paywall')) {
+        const wrap = document.createElement('div');
+        wrap.id = 'fl-paywall';
+        wrap.style.cssText = 'margin-top:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:12px;color:#fff;width:100%';
+        wrap.innerHTML = `
+          <div style="font-size:13px;font-weight:700;margin-bottom:8px">Tu as épuisé tes messages pour cette période.</div>
+          <div style="font-size:11px;color:#c9b8e7;line-height:1.5;margin-bottom:10px">Passe au plan supérieur ou ajoute un pack de 20 messages pour continuer la conversation.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <a href="${window.FIRST_LOVE_CONFIG.checkout.starter}" target="_blank" rel="noopener" class="fl-link-btn">Découverte 3,99€</a>
+            <a href="${window.FIRST_LOVE_CONFIG.checkout.intime}" target="_blank" rel="noopener" class="fl-link-btn">Intime 7,99€</a>
+            <a href="${window.FIRST_LOVE_CONFIG.checkout.premium}" target="_blank" rel="noopener" class="fl-link-btn">Premier Amour 14,99€</a>
+            <a href="${window.FIRST_LOVE_CONFIG.checkout.pack20}" target="_blank" rel="noopener" class="fl-link-btn">Pack +20</a>
+          </div>`;
+        document.getElementById('chat-row').insertAdjacentElement('afterend', wrap);
+      }
+    } else {
+      input.disabled = false;
+      send.disabled = false;
+      send.style.opacity = '1';
+      input.placeholder = t ? t('placeholder') : 'Dis lui quelque chose...';
+      document.getElementById('fl-paywall')?.remove();
+    }
+  }
+
+  function saveCurrentState(){
+    try {
+      localStorage.setItem('fl_state_common', JSON.stringify({ charNames, currentChar }));
+      localStorage.setItem(`fl_state_${currentChar}`, JSON.stringify({
+        S, chatHistory,
+        hairC1, hairC2, eyeC, hairStyle,
+        boyHairC, boyEyeC,
+        currentChar,
+        updatedAt: Date.now()
+      }));
+    } catch (e) { console.error(e); }
+  }
+
+  function restoreStateFor(char){
+    try {
+      const common = JSON.parse(localStorage.getItem('fl_state_common') || 'null');
+      if (common?.charNames) charNames = common.charNames;
+      const raw = JSON.parse(localStorage.getItem(`fl_state_${char}`) || 'null');
+      if (!raw) return;
+      if (raw.S) S = raw.S;
+      if (Array.isArray(raw.chatHistory)) chatHistory = raw.chatHistory;
+      if (raw.hairC1) hairC1 = raw.hairC1;
+      if (raw.hairC2) hairC2 = raw.hairC2;
+      if (raw.eyeC) eyeC = raw.eyeC;
+      if (raw.hairStyle) hairStyle = raw.hairStyle;
+      if (raw.boyHairC) boyHairC = raw.boyHairC;
+      if (raw.boyEyeC) boyEyeC = raw.boyEyeC;
+    } catch (e) { console.error(e); }
+  }
+
+  const originalStartApp = window.startApp;
+  window.startApp = function(char){
+    restoreStateFor(char);
+    originalStartApp(char);
+    setTimeout(() => {
+      updateBar();
+      applyPaywallState();
+      saveCurrentState();
+    }, 100);
+  };
+
+  const originalAct = window.act;
+  window.act = function(type){
+    originalAct(type);
+    saveCurrentState();
+    updateBar();
+  };
+
+  const originalApplyName = window.applyName;
+  window.applyName = function(){
+    originalApplyName();
+    saveCurrentState();
+  };
+
+  ['setGH','setGS','setGE','setGSize','setGOut','setBH','setBE','setBOut'].forEach(fn => {
+    if (typeof window[fn] === 'function') {
+      const original = window[fn];
+      window[fn] = function(){
+        const result = original.apply(this, arguments);
+        saveCurrentState();
+        return result;
+      };
+    }
+  });
+
+  const originalSendMsg = window.sendMsg;
+  window.sendMsg = async function(){
+    const input = document.getElementById('chat-in');
+    const message = input?.value?.trim();
+    if (!message) return;
+    if (getRemaining() <= 0) {
+      applyPaywallState();
+      return;
+    }
+    await originalSendMsg.apply(this, arguments);
+    const billing = loadBilling();
+    billing.used = (billing.used || 0) + 1;
+    saveBilling(billing);
+    updateBar();
+    applyPaywallState();
+    saveCurrentState();
+  };
+
+  const originalGoHome = window.goHome;
+  window.goHome = function(){
+    saveCurrentState();
+    originalGoHome();
+  };
+
+  const style = document.createElement('style');
+  style.textContent = `
+    #monetization-bar{margin:0 auto 10px;max-width:440px}
+    .fl-sale-box{display:flex;justify-content:space-between;align-items:center;gap:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:10px 12px}
+    .fl-sale-plan{font-size:12px;color:#fff}.fl-sale-sub{font-size:11px;color:#cdb8e8;margin-top:2px}
+    .fl-sale-actions{display:flex;gap:8px;flex-wrap:wrap}.fl-mini-btn,.fl-link-btn{background:rgba(233,30,140,.16);border:1px solid rgba(233,30,140,.35);color:#fff;border-radius:999px;padding:8px 12px;font-size:11px;text-decoration:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+    .fl-link-btn{display:inline-flex;align-items:center;justify-content:center}
+  `;
+  document.head.appendChild(style);
+
+  updateBar();
+  applyPaywallState();
+})();
+</script>
+
+</body>
+</html>

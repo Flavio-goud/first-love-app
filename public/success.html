@@ -1,0 +1,26 @@
+<!doctype html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>First Love · Paiement réussi</title><style>body{font-family:Arial,sans-serif;background:#0b0814;color:#f1ebff;display:grid;place-items:center;min-height:100vh;padding:24px} .card{max-width:760px;background:#151024;border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:32px;text-align:center} a{color:#ff69b4}</style></head><body><div class="card"><h1>Paiement confirmé ♡</h1><p>Ton accès First Love est en cours d’activation sur ce navigateur. Si le paiement vient d’être validé, nous pouvons débloquer automatiquement ton plan local de démonstration.</p><p><a href="/app.html">Ouvrir la démo</a> · <a href="/">Retour à l’accueil</a></p><div id="activation-status" style="margin-top:14px;color:#d6c7f2"></div><script>
+(function(){
+  const params = new URLSearchParams(window.location.search);
+  const plan = params.get('plan');
+  const allowed = new Set(['starter','intime','premium','pack20']);
+  const status = document.getElementById('activation-status');
+  if (!plan || !allowed.has(plan)) {
+    status.textContent = 'Paiement confirmé. Plan non précisé dans l’URL de retour.';
+    return;
+  }
+  const now = new Date();
+  const period = `${now.getUTCFullYear()}-${String(now.getUTCMonth()+1).padStart(2,'0')}`;
+  const raw = localStorage.getItem('fl_billing');
+  const billing = raw ? JSON.parse(raw) : { plan:'demo', used:0, extra:0, period };
+  if (plan === 'pack20') {
+    billing.extra = (billing.extra || 0) + 20;
+  } else {
+    billing.plan = plan;
+    billing.used = 0;
+    billing.extra = 0;
+    billing.period = period;
+  }
+  localStorage.setItem('fl_billing', JSON.stringify(billing));
+  status.textContent = plan === 'pack20' ? 'Pack +20 messages activé sur ce navigateur.' : `Plan ${plan} activé sur ce navigateur.`;
+})();
+</script></div></body></html>

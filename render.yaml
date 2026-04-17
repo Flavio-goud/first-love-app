@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: first-love-app
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm install
+    startCommand: npm start

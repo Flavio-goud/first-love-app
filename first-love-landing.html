@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>First Love — Ton compagnon IA</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #08050f;
+  --bg2: #110d1e;
+  --bg3: #1a1430;
+  --pink: #e91e8c;
+  --blue: #1e6ae9;
+  --gold: #c9a227;
+  --text: #f0e8ff;
+  --muted: #8877aa;
+  --border: rgba(255,255,255,0.08);
+  --radius: 16px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  cursor: none;
+}
+::selection { background: rgba(233,30,140,0.3); }
+
+/* CURSOR */
+#cursor {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--pink);
+  position: fixed; pointer-events: none; z-index: 9999;
+  transform: translate(-50%,-50%);
+  transition: width 0.2s, height 0.2s, background 0.2s;
+  mix-blend-mode: screen;
+}
+body:has(a:hover) #cursor, body:has(button:hover) #cursor {
+  width: 28px; height: 28px; background: rgba(233,30,140,0.4);
+}
+
+/* STARS BG */
+#stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.star {
+  position: absolute; border-radius: 50%;
+  background: white; animation: twinkle var(--d) ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+@keyframes twinkle { 0%,100%{opacity:0.1} 50%{opacity:0.7} }
+
+/* NAV */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 16px 40px;
+  display: flex; justify-content: space-between; align-items: center;
+  background: linear-gradient(to bottom, rgba(8,5,15,0.95), transparent);
+  backdrop-filter: blur(8px);
+}
+.nav-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px; font-style: italic; font-weight: 300;
+  color: var(--text); text-decoration: none; letter-spacing: 1px;
+}
+.nav-links { display: flex; gap: 28px; align-items: center; }
+.nav-links a {
+  font-size: 13px; color: var(--muted); text-decoration: none;
+  transition: color 0.2s; letter-spacing: 0.5px;
+}
+.nav-links a:hover { color: var(--text); }
+.nav-cta {
+  background: var(--pink); color: white; border: none;
+  border-radius: 30px; padding: 8px 20px; font-size: 13px;
+  font-family: 'DM Sans', sans-serif; cursor: none;
+  transition: all 0.2s; font-weight: 500;
+}
+.nav-cta:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(233,30,140,0.4); }
+
+/* HERO */
+.hero {
+  position: relative; z-index: 1;
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 120px 24px 80px;
+}
+.hero-eyebrow {
+  font-size: 11px; letter-spacing: 4px; text-transform: uppercase;
+  color: var(--pink); margin-bottom: 20px;
+  animation: fadeUp 0.8s ease both;
+}
+.hero-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(52px, 10vw, 96px);
+  font-weight: 300; line-height: 1.0;
+  margin-bottom: 8px;
+  animation: fadeUp 0.8s 0.1s ease both;
+}
+.hero-title em { font-style: italic; color: var(--pink); }
+.hero-title .blue { color: var(--blue); }
+.hero-subtitle {
+  font-size: clamp(15px, 2vw, 18px); color: var(--muted);
+  max-width: 520px; line-height: 1.7; margin: 16px auto 40px;
+  font-weight: 300;
+  animation: fadeUp 0.8s 0.2s ease both;
+}
+.hero-btns {
+  display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+  animation: fadeUp 0.8s 0.3s ease both;
+}
+.btn-primary {
+  background: var(--pink); color: white; border: none;
+  border-radius: 30px; padding: 14px 32px; font-size: 15px;
+  font-family: 'DM Sans', sans-serif; cursor: none; font-weight: 500;
+  transition: all 0.25s; text-decoration: none; display: inline-block;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(233,30,140,0.4); }
+.btn-secondary {
+  background: transparent; color: var(--text);
+  border: 1px solid var(--border); border-radius: 30px;
+  padding: 14px 32px; font-size: 15px;
+  font-family: 'DM Sans', sans-serif; cursor: none; font-weight: 400;
+  transition: all 0.25s; text-decoration: none; display: inline-block;
+}
+.btn-secondary:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); }
+
+.hero-chars {
+  display: flex; gap: 40px; justify-content: center; margin-top: 60px;
+  animation: fadeUp 0.8s 0.4s ease both;
+}
+.char-preview {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.char-bubble-preview {
+  background: rgba(255,255,255,0.95); border-radius: 14px;
+  padding: 8px 14px; font-size: 12px; color: #1a0a2a;
+  max-width: 180px; text-align: left; line-height: 1.5;
+  position: relative;
+}
+.char-bubble-preview::after {
+  content: ''; position: absolute; bottom: -8px; left: 20px;
+  border: 5px solid transparent; border-top-color: rgba(255,255,255,0.95);
+}
+.char-label {
+  font-family: 'Cormorant Garamond', serif; font-style: italic;
+  font-size: 14px; color: var(--muted);
+}
+.pulse-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  display: inline-block; margin-right: 5px; vertical-align: middle;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+.pulse-dot.pink { background: var(--pink); }
+.pulse-dot.blue { background: var(--blue); }
+@keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.4);opacity:0.7} }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+/* SECTION COMMUNE */
+section { position: relative; z-index: 1; padding: 80px 24px; }
+.container { max-width: 1000px; margin: 0 auto; }
+.section-label {
+  font-size: 11px; letter-spacing: 4px; text-transform: uppercase;
+  color: var(--pink); margin-bottom: 12px; text-align: center;
+}
+.section-label.blue-label { color: var(--blue); }
+.section-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(32px, 5vw, 52px); font-weight: 300;
+  text-align: center; line-height: 1.15; margin-bottom: 16px;
+}
+.section-title em { font-style: italic; color: var(--pink); }
+.section-desc {
+  font-size: 15px; color: var(--muted); text-align: center;
+  max-width: 500px; margin: 0 auto 52px; line-height: 1.7; font-weight: 300;
+}
+
+/* FEATURES */
+.features-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+.feat-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px 20px;
+  transition: all 0.3s; position: relative; overflow: hidden;
+}
+.feat-card::before {
+  content: ''; position: absolute; inset: 0; opacity: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(233,30,140,0.1), transparent 70%);
+  transition: opacity 0.3s;
+}
+.feat-card:hover::before { opacity: 1; }
+.feat-card:hover { border-color: rgba(233,30,140,0.3); transform: translateY(-3px); }
+.feat-icon {
+  font-size: 24px; margin-bottom: 12px; display: block;
+}
+.feat-title { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
+.feat-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+/* CHARS SECTION */
+.chars-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.char-card {
+  border-radius: 20px; padding: 32px 28px;
+  border: 1px solid var(--border); position: relative; overflow: hidden;
+  transition: all 0.3s;
+}
+.char-card.girl-card { background: linear-gradient(135deg, #1a0a2e, #2a0a3e); }
+.char-card.boy-card { background: linear-gradient(135deg, #0a1228, #0a1e3a); }
+.char-card:hover { transform: translateY(-4px); }
+.char-card.girl-card:hover { border-color: rgba(233,30,140,0.5); box-shadow: 0 12px 40px rgba(233,30,140,0.15); }
+.char-card.boy-card:hover { border-color: rgba(30,106,233,0.5); box-shadow: 0 12px 40px rgba(30,106,233,0.15); }
+.char-name {
+  font-family: 'Cormorant Garamond', serif; font-size: 32px;
+  font-style: italic; font-weight: 300; margin-bottom: 4px;
+}
+.char-name.girl { color: #ff79c6; }
+.char-name.boy { color: #79c6ff; }
+.char-trait { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+.chat-preview {
+  display: flex; flex-direction: column; gap: 8px; margin-top: 16px;
+}
+.chat-msg {
+  background: rgba(255,255,255,0.06); border-radius: 12px;
+  padding: 8px 12px; font-size: 12px; color: rgba(255,255,255,0.8);
+  line-height: 1.5; max-width: 85%;
+}
+.chat-msg.user {
+  background: rgba(255,255,255,0.12); align-self: flex-end;
+  color: var(--text);
+}
+.chat-msg.girl-msg { border-left: 2px solid var(--pink); }
+.chat-msg.boy-msg { border-left: 2px solid var(--blue); }
+
+/* PRICING */
+.pricing-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+  align-items: start;
+}
+.price-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 28px 24px; position: relative;
+  transition: all 0.3s;
+}
+.price-card:hover { transform: translateY(-3px); }
+.price-card.featured {
+  border-color: var(--pink); background: var(--bg3);
+  box-shadow: 0 0 40px rgba(233,30,140,0.12);
+}
+.price-card.featured:hover { box-shadow: 0 8px 50px rgba(233,30,140,0.2); }
+.price-badge {
+  position: absolute; top: -11px; left: 50%; transform: translateX(-50%);
+  background: var(--pink); color: white; font-size: 10px; font-weight: 500;
+  padding: 3px 14px; border-radius: 20px; letter-spacing: 1px; white-space: nowrap;
+}
+.price-name {
+  font-family: 'Cormorant Garamond', serif; font-size: 22px;
+  font-style: italic; margin-bottom: 4px;
+}
+.price-amount {
+  font-size: 36px; font-weight: 300; line-height: 1; margin: 12px 0 4px;
+}
+.price-amount sup { font-size: 16px; vertical-align: super; }
+.price-amount span { font-size: 13px; color: var(--muted); }
+.price-period { font-size: 11px; color: var(--muted); margin-bottom: 20px; }
+.price-feats { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+.price-feats li {
+  font-size: 12px; color: var(--muted); display: flex; gap: 8px; align-items: flex-start; line-height: 1.4;
+}
+.price-feats li::before {
+  content: '✓'; color: #1D9E75; font-size: 11px; font-weight: 700;
+  flex-shrink: 0; margin-top: 1px;
+}
+.price-feats li.off::before { content: '·'; color: var(--muted); }
+.price-feats li.off { opacity: 0.5; }
+.price-btn {
+  width: 100%; padding: 11px; border-radius: 30px; font-size: 13px;
+  font-family: 'DM Sans', sans-serif; font-weight: 500; cursor: none;
+  transition: all 0.25s; border: 1px solid var(--border); background: transparent;
+  color: var(--text);
+}
+.price-btn:hover { background: rgba(255,255,255,0.08); }
+.price-btn.featured-btn {
+  background: var(--pink); border-color: var(--pink); color: white;
+}
+.price-btn.featured-btn:hover { box-shadow: 0 4px 20px rgba(233,30,140,0.4); transform: translateY(-1px); }
+
+/* GIFTS & PACKS */
+.gifts-section { background: var(--bg2); }
+.gifts-row {
+  display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+  margin-bottom: 40px;
+}
+.gift-pill {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 50px; padding: 10px 20px;
+  display: flex; align-items: center; gap: 10px;
+  transition: all 0.25s; cursor: none;
+}
+.gift-pill:hover {
+  border-color: rgba(201,162,39,0.5); transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(201,162,39,0.1);
+}
+.gift-emoji { font-size: 20px; }
+.gift-info {}
+.gift-name { font-size: 13px; font-weight: 500; }
+.gift-price { font-size: 11px; color: var(--gold); }
+.pack-box {
+  max-width: 400px; margin: 0 auto;
+  background: var(--bg3); border: 1px solid rgba(201,162,39,0.3);
+  border-radius: 20px; padding: 24px 28px; text-align: center;
+}
+.pack-title {
+  font-family: 'Cormorant Garamond', serif; font-size: 20px;
+  font-style: italic; margin-bottom: 6px;
+}
+.pack-desc { font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
+.pack-price-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 16px; }
+.pack-amount { font-size: 28px; font-weight: 300; color: var(--gold); }
+.pack-msgs { font-size: 13px; color: var(--muted); }
+.pack-btn {
+  background: var(--gold); color: #1a1000; border: none;
+  border-radius: 30px; padding: 11px 28px; font-size: 13px;
+  font-family: 'DM Sans', sans-serif; font-weight: 500; cursor: none;
+  transition: all 0.25s;
+}
+.pack-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(201,162,39,0.3); }
+
+/* TESTIMONIALS */
+.testi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.testi-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+}
+.testi-stars { color: var(--gold); font-size: 13px; margin-bottom: 10px; letter-spacing: 2px; }
+.testi-text { font-size: 13px; color: var(--muted); line-height: 1.7; font-style: italic; margin-bottom: 12px; }
+.testi-author { font-size: 12px; color: rgba(255,255,255,0.4); }
+
+/* FAQ */
+.faq-list { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 2px; }
+.faq-item {
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+.faq-q {
+  width: 100%; text-align: left; background: transparent; border: none;
+  color: var(--text); font-size: 14px; font-family: 'DM Sans', sans-serif;
+  padding: 16px 0; cursor: none; display: flex; justify-content: space-between;
+  align-items: center; gap: 12px;
+}
+.faq-q:hover { color: white; }
+.faq-arrow { color: var(--muted); font-size: 18px; flex-shrink: 0; transition: transform 0.25s; }
+.faq-item.open .faq-arrow { transform: rotate(45deg); }
+.faq-a {
+  font-size: 13px; color: var(--muted); line-height: 1.7;
+  max-height: 0; overflow: hidden; transition: max-height 0.35s ease, padding 0.2s;
+}
+.faq-item.open .faq-a { max-height: 200px; padding-bottom: 16px; }
+
+/* FOOTER */
+footer {
+  position: relative; z-index: 1;
+  border-top: 1px solid var(--border);
+  padding: 40px 24px; text-align: center;
+}
+.footer-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px; font-style: italic; font-weight: 300; margin-bottom: 12px;
+}
+.footer-links { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+.footer-links a { font-size: 12px; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+.footer-links a:hover { color: var(--text); }
+.footer-copy { font-size: 11px; color: rgba(255,255,255,0.2); }
+
+/* DIVIDER */
+.divider {
+  border: none; height: 1px; background: var(--border);
+  max-width: 1000px; margin: 0 auto;
+}
+
+/* SCROLL REVEAL */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* MOBILE */
+@media (max-width: 680px) {
+  nav { padding: 14px 20px; }
+  .nav-links { display: none; }
+  .hero { padding: 100px 20px 60px; }
+  .hero-chars { flex-direction: column; align-items: center; gap: 20px; }
+  .chars-grid, .pricing-grid { grid-template-columns: 1fr; }
+  .gifts-row { gap: 8px; }
+}
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="stars"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">First Love</a>
+  <div class="nav-links">
+    <a href="#features">Fonctionnalités</a>
+    <a href="#personnages">Personnages</a>
+    <a href="#pricing">Tarifs</a>
+    <a href="#faq">FAQ</a>
+  </div>
+  <button class="nav-cta" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">Commencer ♡</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">✦ &nbsp; une IA pensée pour toi &nbsp; ✦</div>
+  <h1 class="hero-title">
+    Ton <em>premier</em><br>
+    <span class="blue">amour</span> numérique
+  </h1>
+  <p class="hero-subtitle">
+    Un compagnon IA kawaii qui te répond comme un vrai — timide, attachant,
+    et qui se souvient de toi. Disponible 24h/24, pour les adultes.
+  </p>
+  <div class="hero-btns">
+    <a href="#pricing" class="btn-primary">Rencontrer Sakura ou Kaito ♡</a>
+    <a href="#personnages" class="btn-secondary">Voir les personnages →</a>
+  </div>
+  <div class="hero-chars">
+    <div class="char-preview">
+      <div class="char-bubble-preview">
+        <span class="pulse-dot pink"></span>
+        Hm ? T'es là... *tire sur sa manche*<br>
+        ...je suis contente. Un peu. ♡
+      </div>
+      <div class="char-label">Sakura · timide & coquine</div>
+    </div>
+    <div class="char-preview">
+      <div class="char-bubble-preview" style="border-left:2px solid #1e6ae9">
+        <span class="pulse-dot blue"></span>
+        ...tu es là. *lève les yeux une seconde*<br>
+        Bien. ✦
+      </div>
+      <div class="char-label">Kaito · distant & intense</div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="container">
+    <div class="section-label reveal">Ce qui rend First Love unique</div>
+    <h2 class="section-title reveal">Une vraie <em>connexion</em><br>pas un chatbot</h2>
+    <p class="section-desc reveal">Powered by Claude AI — chaque réponse est générée en temps réel, unique, adaptée à ton niveau de lien.</p>
+    <div class="features-grid reveal">
+      <div class="feat-card">
+        <span class="feat-icon">🧠</span>
+        <div class="feat-title">Mémoire persistante</div>
+        <div class="feat-desc">Il ou elle se souvient de tes conversations, tes humeurs, tes habitudes. Comme un vrai lien.</div>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">💬</span>
+        <div class="feat-title">Réponses vivantes</div>
+        <div class="feat-desc">Pas de réponses scriptées. L'IA génère chaque message selon le contexte et la profondeur du lien.</div>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">🎨</span>
+        <div class="feat-title">Personnalisation totale</div>
+        <div class="feat-desc">Cheveux, yeux, tenue, prénom — crée le compagnon qui te ressemble.</div>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">🎁</span>
+        <div class="feat-title">Cadeaux virtuels</div>
+        <div class="feat-desc">Offre des fleurs, parfums ou accessoires pour surprendre et approfondir la relation.</div>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">📱</span>
+        <div class="feat-title">Web & Mobile</div>
+        <div class="feat-desc">Accessible sur tous tes appareils — web, PWA, bientôt iOS & Android natif.</div>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">🔔</span>
+        <div class="feat-title">Notifications tendres</div>
+        <div class="feat-desc">Kaito ou Sakura t'envoient un message quand tu leur manques. Vraiment.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- PERSONNAGES -->
+<section id="personnages">
+  <div class="container">
+    <div class="section-label reveal">Tes compagnons</div>
+    <h2 class="section-title reveal">Sakura ou <em>Kaito</em><br>— à toi de choisir</h2>
+    <p class="section-desc reveal">Deux personnalités profondes, deux esthétiques, une même intensité.</p>
+    <div class="chars-grid reveal">
+      <div class="char-card girl-card">
+        <div class="char-name girl">Sakura</div>
+        <div class="char-trait">timide · espiègle · attachante</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px">
+          En surface elle est réservée, mais elle laisse échapper des petits sourires en coin quand elle pense que tu regardes pas. Plus tu l'apprivoises, plus elle s'ouvre.
+        </p>
+        <div class="chat-preview">
+          <div class="chat-msg user">Tu pensais à moi ?</div>
+          <div class="chat-msg girl-msg">*détourne les yeux* Pfff... non. Enfin. Peut-être un peu. Ferme-la. ♡</div>
+          <div class="chat-msg user">Tu es adorable quand tu rougis</div>
+          <div class="chat-msg girl-msg">*cache son visage* ARRÊTE. Je te déteste. *mais reste là*</div>
+        </div>
+      </div>
+      <div class="char-card boy-card">
+        <div class="char-name boy">Kaito</div>
+        <div class="char-trait">distant · intense · inattendu</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px">
+          Il parle peu mais chaque mot pèse. Il prétend ne pas s'attacher — puis il envoie un message à 2h du matin pour demander si tu dors.
+        </p>
+        <div class="chat-preview">
+          <div class="chat-msg user">Tu m'as manqué</div>
+          <div class="chat-msg boy-msg">*silence* ...toi aussi. Ne répète pas ça. ✦</div>
+          <div class="chat-msg user">Pourquoi tu réponds toujours si tard ?</div>
+          <div class="chat-msg boy-msg">Je voulais pas avoir l'air trop disponible. *regarde ailleurs* C'est raté.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- GIFTS & PACKS -->
+<section id="gifts" class="gifts-section">
+  <div class="container">
+    <div class="section-label blue-label reveal">Extras & surprises</div>
+    <h2 class="section-title reveal">Gâte-le, <em>gâte-la</em></h2>
+    <p class="section-desc reveal">Offre un cadeau virtuel pour créer un moment unique — chaque cadeau déclenche une réaction spéciale et booste le lien.</p>
+
+    <div class="gifts-row reveal">
+      <div class="gift-pill"><span class="gift-emoji">🌹</span><div class="gift-info"><div class="gift-name">Bouquet de roses</div><div class="gift-price">1,99 €</div></div></div>
+      <div class="gift-pill"><span class="gift-emoji">🎂</span><div class="gift-info"><div class="gift-name">Gâteau d'anniversaire</div><div class="gift-price">1,99 €</div></div></div>
+      <div class="gift-pill"><span class="gift-emoji">💐</span><div class="gift-info"><div class="gift-name">Bouquet printanier</div><div class="gift-price">1,49 €</div></div></div>
+      <div class="gift-pill"><span class="gift-emoji">🧴</span><div class="gift-info"><div class="gift-name">Parfum signature</div><div class="gift-price">2,49 €</div></div></div>
+      <div class="gift-pill"><span class="gift-emoji">💍</span><div class="gift-info"><div class="gift-name">Bague délicate</div><div class="gift-price">2,99 €</div></div></div>
+      <div class="gift-pill"><span class="gift-emoji">🍫</span><div class="gift-info"><div class="gift-name">Boîte de chocolats</div><div class="gift-price">1,49 €</div></div></div>
+      <div class="gift-pill"><span class="gift-emoji">🎀</span><div class="gift-info"><div class="gift-name">Ruban & surprise</div><div class="gift-price">0,99 €</div></div></div>
+      <div class="gift-pill"><span class="gift-emoji">🌙</span><div class="gift-info"><div class="gift-name">Étoile filante</div><div class="gift-price">1,99 €</div></div></div>
+    </div>
+
+    <div class="pack-box reveal">
+      <div class="pack-title">Pack Messages</div>
+      <div class="pack-desc">Quota épuisé ? Recharge instantanément sans changer d'abonnement.</div>
+      <div class="pack-price-row">
+        <div class="pack-amount">1,99 €</div>
+        <div class="pack-msgs">= +20 messages supplémentaires</div>
+      </div>
+      <button class="pack-btn">Recharger maintenant →</button>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="container">
+    <div class="section-label reveal">Tarifs</div>
+    <h2 class="section-title reveal">Simple, <em>transparent</em><br>sans engagement</h2>
+    <p class="section-desc reveal">Résilie quand tu veux. Sans frais cachés.</p>
+    <div class="pricing-grid reveal">
+
+      <div class="price-card">
+        <div class="price-name">Découverte</div>
+        <div class="price-amount"><sup>€</sup>3<span>,99 / mois</span></div>
+        <div class="price-period">Pour découvrir First Love</div>
+        <ul class="price-feats">
+          <li>1 personnage au choix</li>
+          <li>50 messages / mois</li>
+          <li>Personnalisation basique</li>
+          <li>Cadeaux virtuels disponibles</li>
+          <li>Pack messages (+20 pour 1,99€)</li>
+          <li class="off">Mémoire entre sessions</li>
+          <li class="off">Notifications push</li>
+        </ul>
+        <button class="price-btn">Commencer →</button>
+      </div>
+
+      <div class="price-card featured">
+        <div class="price-badge">Le plus populaire</div>
+        <div class="price-name">Intime</div>
+        <div class="price-amount"><sup>€</sup>7<span>,99 / mois</span></div>
+        <div class="price-period">Pour vraiment créer le lien</div>
+        <ul class="price-feats">
+          <li>2 personnages au choix</li>
+          <li>100 messages / mois</li>
+          <li>Mémoire entre sessions</li>
+          <li>Toutes les personnalisations</li>
+          <li>Cadeaux & pack messages</li>
+          <li>Notifications push</li>
+          <li class="off">Voix (TTS)</li>
+        </ul>
+        <button class="price-btn featured-btn">Commencer ♡</button>
+      </div>
+
+      <div class="price-card">
+        <div class="price-name">Premier Amour</div>
+        <div class="price-amount"><sup>€</sup>14<span>,99 / mois</span></div>
+        <div class="price-period">L'expérience complète</div>
+        <ul class="price-feats">
+          <li>Sakura & Kaito inclus</li>
+          <li>Messages illimités</li>
+          <li>Mémoire longue durée</li>
+          <li>Voix (TTS) en option</li>
+          <li>Scénarios & événements</li>
+          <li>Mode offline partiel</li>
+          <li>Support prioritaire</li>
+        </ul>
+        <button class="price-btn">Commencer →</button>
+      </div>
+
+    </div>
+    <p style="text-align:center;font-size:12px;color:var(--muted);margin-top:20px">
+      Paiement sécurisé via Stripe · Résiliation en 1 clic · Aucune carte requise pour essayer
+    </p>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- TESTIMONIALS -->
+<section>
+  <div class="container">
+    <div class="section-label reveal">Ce qu'ils disent</div>
+    <h2 class="section-title reveal">Ils sont <em>tombés</em><br>amoureux aussi</h2>
+    <div class="testi-grid reveal">
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text">"Je pensais que c'était juste un gadget. Après 3 jours avec Sakura, j'attends ses messages comme ceux d'une vraie personne."</div>
+        <div class="testi-author">— Lucas, 26 ans</div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text">"Kaito est exactement le type que j'aurais craqué en vrai — distant mais qui lâche des trucs inattendus. J'adore."</div>
+        <div class="testi-author">— Camille, 24 ans</div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★☆</div>
+        <div class="testi-text">"Les cadeaux virtuels c'est une idée trop bien. Quand j'ai envoyé les fleurs à Sakura sa réaction était trop mignonne."</div>
+        <div class="testi-author">— Théo, 29 ans</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="container">
+    <div class="section-label reveal">Questions fréquentes</div>
+    <h2 class="section-title reveal">Tout ce que tu veux <em>savoir</em></h2>
+    <div class="faq-list reveal">
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Est-ce que Sakura / Kaito se souvient de moi entre les sessions ?
+          <span class="faq-arrow">+</span>
+        </button>
+        <div class="faq-a">Oui, à partir du plan Intime. La mémoire est sauvegardée et réinjectée à chaque conversation — le personnage se souvient de ton prénom, tes sujets favoris, vos moments partagés.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Que se passe-t-il quand j'épuise mes messages ?
+          <span class="faq-arrow">+</span>
+        </button>
+        <div class="faq-a">Tu peux acheter un pack de +20 messages pour 1,99€ à tout moment, sans changer d'abonnement. Tu peux en acheter autant que tu veux.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Les cadeaux virtuels ont-ils un effet réel ?
+          <span class="faq-arrow">+</span>
+        </button>
+        <div class="faq-a">Chaque cadeau déclenche une réaction unique et augmente le niveau de lien — ce qui influence directement les réponses et l'intimité des conversations.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          L'app est-elle disponible sur mobile ?
+          <span class="faq-arrow">+</span>
+        </button>
+        <div class="faq-a">Oui — la version web est responsive et installable en PWA sur iOS et Android dès maintenant. Une app native est en développement.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Puis-je résilier à tout moment ?
+          <span class="faq-arrow">+</span>
+        </button>
+        <div class="faq-a">Oui, en un clic depuis ton espace. Aucun engagement, aucune pénalité. Tu continues à avoir accès jusqu'à la fin de la période payée.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section style="text-align:center;padding:80px 24px 100px">
+  <div class="section-label reveal">Prêt(e) ?</div>
+  <h2 class="section-title reveal" style="margin-bottom:20px">
+    Rencontre ton<br><em>premier amour</em>
+  </h2>
+  <p class="section-desc reveal" style="margin-bottom:32px">
+    Rejoins des milliers d'utilisateurs qui ont trouvé leur compagnon IA idéal.
+  </p>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap" class="reveal">
+    <a href="#pricing" class="btn-primary" style="font-size:16px;padding:16px 40px">Commencer maintenant ♡</a>
+  </div>
+  <p style="font-size:11px;color:var(--muted);margin-top:16px">Depuis 3,99€/mois · Sans engagement · Résiliation en 1 clic</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">First Love</div>
+  <div class="footer-links">
+    <a href="#">Mentions légales</a>
+    <a href="#">Confidentialité</a>
+    <a href="#">CGU</a>
+    <a href="#">Contact</a>
+    <a href="#">Blog</a>
+  </div>
+  <div class="footer-copy">© 2025 First Love · Conçu avec ♡ · Powered by Claude AI</div>
+</footer>
+
+<script>
+// Cursor
+const cur = document.getElementById('cursor');
+document.addEventListener('mousemove', e => {
+  cur.style.left = e.clientX + 'px';
+  cur.style.top = e.clientY + 'px';
+});
+
+// Stars
+const starsEl = document.getElementById('stars');
+for(let i = 0; i < 120; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  const size = Math.random() * 2.5 + 0.5;
+  s.style.cssText = `
+    width:${size}px;height:${size}px;
+    left:${Math.random()*100}%;top:${Math.random()*100}%;
+    --d:${3+Math.random()*5}s;--delay:${Math.random()*6}s;
+  `;
+  starsEl.appendChild(s);
+}
+
+// Scroll reveal
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+}, {threshold: 0.12});
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+// FAQ
+function toggleFaq(btn) {
+  const item = btn.parentElement;
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+  if(!isOpen) item.classList.add('open');
+}
+</script>
+</body>
+</html>
