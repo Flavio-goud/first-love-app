@@ -1,0 +1,10 @@
+{
+  "appId": "com.flaviogoud.firstlove",
+  "appName": "First Love",
+  "webDir": "public",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://first-love-app.onrender.com",
+    "cleartext": false
+  }
+}

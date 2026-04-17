@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="theme-color" content="#e91e8c"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<link rel="manifest" href="/manifest.webmanifest"/>
+<link rel="icon" href="/icons/icon-512.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/icons/icon-512.svg"/>
 <title>First Love — démo</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <style>
@@ -214,6 +220,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);color:var(--text);m
 <!-- MAIN APP -->
 <div id="main-app">
   <div id="app-title">First Love</div>
+  <div id="install-bar" style="display:none"></div>
   <div id="monetization-bar"></div>
   <div class="app-tagline" id="app-tagline">✦ ton compagnon IA ✦</div>
   <div id="screen" class="girl-screen">
@@ -932,6 +939,28 @@ window.FIRST_LOVE_CONFIG = {
     .fl-link-btn{display:inline-flex;align-items:center;justify-content:center}
   `;
   document.head.appendChild(style);
+
+  let deferredInstallPrompt = null;
+  const installBar = document.getElementById('install-bar');
+  if (installBar) {
+    installBar.innerHTML = `<div class="fl-install-box"><div><div class="fl-install-text">Installer First Love</div><div class="fl-install-sub">Ajoute l'app sur ton écran d'accueil mobile.</div></div><button class="fl-mini-btn" id="install-app-btn" type="button">Installer</button></div>`;
+    const installAppBtn = document.getElementById('install-app-btn');
+    installAppBtn?.addEventListener('click', async () => {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice.catch(() => null);
+      deferredInstallPrompt = null;
+      installBar.style.display = 'none';
+    });
+  }
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    if (installBar) installBar.style.display = 'block';
+  });
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => null));
+  }
 
   updateBar();
   applyPaywallState();

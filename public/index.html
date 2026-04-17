@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="theme-color" content="#e91e8c"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<link rel="manifest" href="/manifest.webmanifest"/>
+<link rel="icon" href="/icons/icon-512.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/icons/icon-512.svg"/>
 <title>First Love — compagnon IA romantique</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <style>
@@ -466,6 +472,7 @@ footer {
   <div class="hero-btns">
     <a href="#pricing" class="btn-primary">Rencontrer Sakura ou Kaito ♡</a>
     <a href="#personnages" class="btn-secondary">Voir les personnages →</a>
+    <button class="btn-secondary" id="install-cta" style="display:none" type="button">Installer l'app</button>
   </div>
   <div class="hero-chars">
     <div class="char-preview">
@@ -880,6 +887,28 @@ if (packLink) {
     packLink.setAttribute('target', '_blank');
     packLink.setAttribute('rel', 'noopener noreferrer');
   });
+}
+</script>
+<script>
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (event) => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  const btn = document.getElementById('install-cta');
+  if (btn) btn.style.display = 'inline-block';
+});
+const installBtn = document.getElementById('install-cta');
+if (installBtn) {
+  installBtn.addEventListener('click', async () => {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice.catch(() => null);
+    deferredInstallPrompt = null;
+    installBtn.style.display = 'none';
+  });
+}
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => null));
 }
 </script>
 </body>
